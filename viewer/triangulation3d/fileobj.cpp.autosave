@@ -1,0 +1,107 @@
+#include "fileobj.h"
+
+Obj::Obj(){
+
+}
+
+Obj::Obj(QList<QVector3D> vertexes, QList<QVector3D> textures, QList<Polygon> polygons)
+{
+    this->vertexes = vertexes;
+    this->textures = textures;
+    this->polygons = polygons;
+}
+
+Obj::~Obj(){
+
+}
+
+bool Obj::readObj(QString path)
+{
+    vertexes.clear();
+    polygons.clear();
+
+    QFile file(path);
+    if(!file.open(QIODevice::ReadOnly))
+        return false;
+    QTextStream textStream(&file);
+    while (!textStream.atEnd()){
+        QString line = textStream.readLine();
+        QStringList parsedLine = line.split(' ');
+
+        // vertexes reading
+        bool isVertex = QString::compare(parsedLine.at(0), "v", Qt::CaseInsensitive) == 0;
+        if(isVertex){
+            if(parsedLine.at(1).isEmpty())
+                parsedLine.removeAt(1);
+            vertexes.append(QVector3D(parsedLine.at(1).toFloat(),
+                                      parsedLine.at(2).toFloat(),
+                                      parsedLine.at(3).toFloat()));
+        }
+
+        // textures reading
+        if(!QString::compare(parsedLine.at(0), "vt", Qt::CaseInsensitive)){
+            textures.append(QVector3D(parsedLine.at(1).toFloat(),
+                                      parsedLine.at(2).toFloat(),
+                                      parsedLine.at(3).toFloat()));
+        }
+
+        // polygons reading
+        if(!QString::compare(parsedLine.at(0), "f", Qt::CaseInsensitive)){
+            Polygon polygon;
+            for(int i=1; i < parsedLine.length() - 1; i++){
+                line = parsedLine.at(i);
+                QStringList polyLine = line.split('/');
+                int vertex  = polyLine.at(0).toInt();
+                int texture = polyLine.length()==2 ? polyLine.at(1).toInt() : 0;
+                int normal  = polyLine.length()==3 ? polyLine.at(2).toInt() : 0;
+                polygon.polygon.append(Poly(vertex, texture, normal));
+            }
+            polygons.append(polygon);
+        }
+    }
+
+    file.close();
+    return true;
+}
+
+void Obj::writeObj(QString path) const
+{
+    QFile file(path);
+    if(file.open(QIODevice::WriteOnly)){
+        QTextStream textStream(&file);
+
+        // vertexes writing
+        foreach (QVector3D v, vertexes) {
+            textStream << "v  " << v.x()
+                       << " "   << v.y()
+                       << " "   << v.z() << endl;
+        }
+        textStream << "# " << vertexes.length() << " vertices" << endl << endl;
+
+        // textures writing
+        foreach (QVector3D vt, textures) {
+            textStream << "vt " << vt.x()
+                       << " "   << vt.y()
+                       << " "   << vt.z() << endl;
+        }
+        textStream << "# " << textures.length() << " texture coords" << endl << endl;
+
+        // polygons writing
+        foreach (Polygon f, polygons) {
+            textStream << "f ";
+            foreach (Poly p, f.polygon) {
+                textStream << p.vertex;
+                if(p.texture != 0)
+                    textStream << "/" << p.texture;
+                if(p.normal  != 0)
+                    textStream << "/" << p.normal;
+                textStream << " ";
+            }
+            textStream << endl;
+        }
+        textStream << "# " << polygons.length() << " polygons" << endl;
+    }
+
+    file.close();
+}
+
