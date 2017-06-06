@@ -56,7 +56,7 @@ void Widget::paintGL()
 {
     glClearColor(0.5, 0.5, 0.5, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    glEnable(GL_DEPTH_TEST);
     zoomMatrix.setToIdentity();
     zoomMatrix.translate(0,0,-zoom);
     QMatrix4x4 modelview = zoomMatrix * rotate * translate;
@@ -64,22 +64,36 @@ void Widget::paintGL()
     shader->bind();
     shader->setUniformValue("modelViewMatrix", modelview);
     shader->setUniformValue("projectionMatrix",camera.projection);
-    shader->setUniformValue("color",QVector4D(0.5,0.5,1,1));
+    shader->setUniformValue("color", QVector4D(0.5,0.5,1,1));
     shader->enableAttributeArray("vertex");
+    shader->enableAttributeArray("normal");
+
     vertexBuffer.bind();
-    indexBuffer.bind();
+
+    indexBuffer.bind(); 
     int polygonsCount =model->polygons.count()*3;
-    shader->setAttributeBuffer("vertex",GL_FLOAT,0,3,0);
+    shader->setAttributeBuffer("vertex",GL_FLOAT,0,3,6*sizeof(GLuint));
+    shader->setAttributeBuffer("normal",GL_FLOAT,3,3,6*sizeof(GLuint));
+    shader->setAttributeValue( "view",  modelview.inverted()*QVector3D(0,0,0));
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(1,1);
     glDrawElements(GL_TRIANGLES, polygonsCount, GL_UNSIGNED_INT, 0);
+    glDisable(GL_POLYGON_OFFSET_FILL);
     indexBuffer.release();
+
     indexLineBuffer.bind();
-    shader->setUniformValue("color",QVector4D(1,1,1,1));
-    shader->setAttributeBuffer("vertex",GL_FLOAT,0,3,0);
+    shader->setUniformValue("color",QVector4D(0.9,0.9,0.9,1));
+    shader->setAttributeBuffer("vertex",GL_FLOAT,0,3,6*sizeof(GLuint));
     glDrawElements(GL_LINES, polygonsCount*2, GL_UNSIGNED_INT, 0);
+    indexLineBuffer.release();
+
+    vertexBuffer.release();
+
+    shader->disableAttributeArray("normal");
     shader->disableAttributeArray("vertex");
     shader->release();
-    vertexBuffer.release();
-    indexLineBuffer.release();
+
+
     //glDrawElements(GL_TRIANGLES, model->polygons.count()*3, 0, indexBuffer);
     //glDrawArrays();
 
@@ -207,9 +221,15 @@ void Widget::fitToView(bool simple)
     float r01 = QVector3D::dotProduct((NFPosY - center), fovLineVector)/fovLineVector.length();
     QVector3D prevFovPoint = NFPosY - r01/fovLineVector.length()*fovLineVector;
     QVector3D radiusFovPoint = (prevFovPoint-center).normalized()*radius;
-    float coef = radius / (radius - (radiusFovPoint-prevFovPoint).length()) * zoom; // else - revert and -res
+    float coef; // = radius / ; // else - revert and -res
+    float distance = (radius - (radiusFovPoint-prevFovPoint).length()) * zoom;
     //qInfo() << coef << radius / qSin(40);
+    if(radius > distance)
+        coef = radius / distance;
+    else
+        coef = distance / radius;
     zoom = coef + nearf;
+    update();
 }
 
 void Widget::resetScene()
@@ -227,22 +247,31 @@ void Widget::loadVBO()
 {
     // vertices
     int countV = model->vertexes.count();
-    vertices = new GLfloat[countV*3];
+    vertices = new GLfloat[countV*3*2];
     for(int i=0; i < countV; i++){
-        vertices[i*3+0] = model->vertexes[i].x();
-        vertices[i*3+1] = model->vertexes[i].y();
-        vertices[i*3+2] = model->vertexes[i].z();
+        vertices[i*6+0] = model->vertexes[i].x();
+        vertices[i*6+1] = model->vertexes[i].y();
+        vertices[i*6+2] = model->vertexes[i].z();
+        //model->normals[i] /= model->normals[i].w();
+        vertices[i*6+3] = model->normals[i].x()/model->normals[i].w();
+        vertices[i*6+4] = model->normals[i].y()/model->normals[i].w();
+        vertices[i*6+5] = model->normals[i].z()/model->normals[i].w();
     }
 
     vertexBuffer = QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
     vertexBuffer.create();
     vertexBuffer.bind();
-    vertexBuffer.allocate(vertices, countV*3*sizeof(GLfloat));
+    vertexBuffer.allocate(vertices, (countV*3*2)*sizeof(GLfloat));
     vertexBuffer.release();
     //delete [] vertices;
 
+    // http://www.gamedev.ru/code/articles/HLSL?page=4
+    // http://steps3d.narod.ru/tutorials/lighting-tutorial.html
+    // https://iandreev.wordpress.com/2010/06/27/%D0%BC%D0%BE%D0%B4%D0%B5%D0%BB%D1%8C-%D0%BE%D1%81%D0%B2%D0%B5%D1%89%D0%B5%D0%BD%D0%B8%D1%8F-%D0%B1%D0%BB%D0%B8%D0%BD%D0%BD%D0%B0-%D1%84%D0%BE%D0%BD%D0%B3%D0%B0/
+    // https://stackoverflow.com/questions/21079623/how-to-calculate-the-normal-matrix
 
     // indices
+    // polygons
     int countF = model->polygons.count();
     indices = new GLuint[countF*3+countF*3*2];
     for(int i=0; i < countF; i++){
@@ -250,6 +279,7 @@ void Widget::loadVBO()
         indices[i*3+1] = model->polygons[i].polygon[1].vertex;
         indices[i*3+2] = model->polygons[i].polygon[2].vertex;
     }
+    // polygon edges
     int shift = countF*3;
     for(int i=0; i < countF; i++){
         indices[shift+i*6+0] = model->polygons[i].polygon[0].vertex;

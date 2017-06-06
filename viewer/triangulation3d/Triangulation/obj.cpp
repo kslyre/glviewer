@@ -1,4 +1,5 @@
 #include "obj.h"
+#include <QDebug>
 
 Obj::Obj(){
 
@@ -45,6 +46,14 @@ void Obj::readObj(QTextStream &textStream)
                                       parsedLine.at(3).toFloat()));
         }
 
+        // normals reading
+        bool isNormal = QString::compare(parsedLine.at(0), "vn", Qt::CaseInsensitive) == 0;
+        if(isNormal){
+            normals.append(QVector3D(parsedLine.at(1).toFloat(),
+                                     parsedLine.at(2).toFloat(),
+                                     parsedLine.at(3).toFloat()).toVector4D());
+        }
+
         // polygons reading
         bool isPolygon = QString::compare(parsedLine.at(0), "f", Qt::CaseInsensitive) == 0;
         if(isPolygon){
@@ -58,6 +67,30 @@ void Obj::readObj(QTextStream &textStream)
                 polygon.polygon.append(PolyStruct(vertex, texture, normal));
             }
             polygons.append(polygon);
+        } 
+    }
+
+    // normals calculate
+    normals.clear();
+    foreach (QVector3D v, vertexes) {
+        normals.append(QVector3D(0,0,0).toVector4D());
+    }
+    // normal:
+    // a 1 - 0, b 2 - 0
+    // a x b. normalize
+    //qInfo() << polygons[0].polygon[0].vertex;
+    foreach (PolygonStruct f, polygons) {
+        int count = f.polygon.length();
+        for (int i=0; i<count; i++){
+            QVector3D a = i == 0 ?
+                        vertexes[f.polygon[count-1].vertex] - vertexes[f.polygon[i].vertex] :
+                    vertexes[f.polygon[i-1].vertex] - vertexes[f.polygon[i].vertex] ;
+            QVector3D b = i == count-1 ?
+                        vertexes[f.polygon[0].vertex] - vertexes[f.polygon[i].vertex] :
+                    vertexes[f.polygon[i+1].vertex] - vertexes[f.polygon[i].vertex] ;
+            //qInfo() << a << b << i << f.polygon[i].vertex;
+            normals[f.polygon[i].vertex] += QVector3D::normal(a, b).toVector4D();
+            normals[f.polygon[i].vertex].setW(normals[f.polygon[i].vertex].w()+1);
         }
     }
 }

@@ -60,6 +60,7 @@ bool Window::openFile()
 
     glwidget->model->vertexes = inputObj->vertexes;
     glwidget->model->textures = inputObj->textures;
+    glwidget->model->normals = inputObj->normals;
     glwidget->loadVBO();
     glwidget->fitToView(true);
 

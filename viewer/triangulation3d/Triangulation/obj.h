@@ -3,6 +3,7 @@
 
 #include <file.h>
 #include <QVector3D>
+#include <QVector4D>
 #include <structs.h>
 #include <QTextStream>
 
@@ -15,6 +16,7 @@ public:
 
     QList<QVector3D> vertexes;
     QList<QVector3D> textures;
+    QList<QVector4D> normals;
     QList<PolygonStruct> polygons;
 
     void readObj(QTextStream &textStream);
