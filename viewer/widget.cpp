@@ -61,10 +61,12 @@ void Widget::paintGL()
     zoomMatrix.translate(0,0,-zoom);
     QMatrix4x4 modelview = zoomMatrix * rotate * translate;
 
+    if(model != NULL){
     shader->bind();
     shader->setUniformValue("modelViewMatrix", modelview);
     shader->setUniformValue("projectionMatrix",camera.projection);
     shader->setUniformValue("color", QVector4D(0.5,0.5,1,1));
+    shader->setUniformValue("light", QVector3D(0,0,50));
     shader->enableAttributeArray("vertex");
     shader->enableAttributeArray("normal");
 
@@ -72,26 +74,27 @@ void Widget::paintGL()
 
     indexBuffer.bind(); 
     int polygonsCount =model->polygons.count()*3;
-    shader->setAttributeBuffer("vertex",GL_FLOAT,0,3,6*sizeof(GLuint));
-    shader->setAttributeBuffer("normal",GL_FLOAT,3,3,6*sizeof(GLuint));
-    shader->setAttributeValue( "view",  modelview.inverted()*QVector3D(0,0,0));
+    shader->setAttributeBuffer("vertex",GL_FLOAT,0,3,6*sizeof(GLfloat));
+    shader->setAttributeBuffer("normal",GL_FLOAT,3*sizeof(GLfloat),3,6*sizeof(GLfloat));
+    shader->setAttributeValue( "view",  modelview.inverted()*QVector4D(0,0,0,1));
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(1,1);
     glDrawElements(GL_TRIANGLES, polygonsCount, GL_UNSIGNED_INT, 0);
     glDisable(GL_POLYGON_OFFSET_FILL);
     indexBuffer.release();
 
-    indexLineBuffer.bind();
-    shader->setUniformValue("color",QVector4D(0.9,0.9,0.9,1));
-    shader->setAttributeBuffer("vertex",GL_FLOAT,0,3,6*sizeof(GLuint));
-    glDrawElements(GL_LINES, polygonsCount*2, GL_UNSIGNED_INT, 0);
-    indexLineBuffer.release();
+//    indexLineBuffer.bind();
+//    shader->setUniformValue("color",QVector4D(0.9,0.9,0.9,1));
+//    shader->setAttributeBuffer("vertex",GL_FLOAT,0,3,6*sizeof(GLuint));
+//    glDrawElements(GL_LINES, polygonsCount*2, GL_UNSIGNED_INT, 0);
+//    indexLineBuffer.release();
 
     vertexBuffer.release();
 
     shader->disableAttributeArray("normal");
     shader->disableAttributeArray("vertex");
     shader->release();
+    }
 
 
     //glDrawElements(GL_TRIANGLES, model->polygons.count()*3, 0, indexBuffer);
@@ -252,10 +255,12 @@ void Widget::loadVBO()
         vertices[i*6+0] = model->vertexes[i].x();
         vertices[i*6+1] = model->vertexes[i].y();
         vertices[i*6+2] = model->vertexes[i].z();
-        //model->normals[i] /= model->normals[i].w();
-        vertices[i*6+3] = model->normals[i].x()/model->normals[i].w();
-        vertices[i*6+4] = model->normals[i].y()/model->normals[i].w();
-        vertices[i*6+5] = model->normals[i].z()/model->normals[i].w();
+        //qInfo() << model->normals[i] / model->normals[i].w();
+        model->normals[i].toVector3D().normalize();
+        //qInfo() << model->normals[i];
+        vertices[i*6+3] = model->normals[i].x();//model->normals[i].w();
+        vertices[i*6+4] = model->normals[i].y();//model->normals[i].w();
+        vertices[i*6+5] = model->normals[i].z();//model->normals[i].w();
     }
 
     vertexBuffer = QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
