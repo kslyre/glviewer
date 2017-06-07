@@ -5,10 +5,12 @@ varying vec4 viewo;
 
 void main(void)
 {
-    //vec3 normal = modelViewMatrix * normals;
-    vec4 reflected = reflect(-normalize(viewo), norm);
+    vec4 reflected = reflect(-viewo, norm);
     //vec3 r = 2*dot(normalize(view), normal)*normal - view;
-    vec4 spec = 0.5 * 0.2 * pow(dot(viewo, reflected), 0.4) * vec4(1,1,1,1); //normalize(view), reflected
-    vec4 diff = dot(viewo, norm)*vec4(0,0,0,1);
+    vec4 spec = 0.4 * pow(dot(viewo, reflected), 1) * vec4(1,1,1,1);
+    //spec = clamp(spec, 0, 1);
+    vec4 diff = 0.05*dot(viewo, norm)*vec4(1,1,1,1);
+    //diff = clamp(diff, 0, 1);
+
     gl_FragColor = color + spec;
 }
