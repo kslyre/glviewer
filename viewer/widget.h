@@ -12,6 +12,7 @@
 #include <QOpenGLBuffer>
 #include <QGLBuffer>
 #include <QOpenGLFunctions>
+#include <QOpenGLTexture>
 
 class Widget : public QGLWidget
 {
@@ -29,7 +30,9 @@ public:
     QOpenGLShaderProgram *shader = nullptr;
     //QOpenGLFunctions *glFunctions = nullptr;
 
-protected:   
+    void loadVBO2();
+    void trace();
+protected:
     void initializeGL();
     void resizeGL(int nWidth, int nHeight);
     void paintGL();
@@ -50,9 +53,12 @@ private:
     GLuint vboId2;
     QOpenGLBuffer vertexBuffer;
     QOpenGLBuffer indexBuffer;
-    QOpenGLBuffer indexLineBuffer;
+    QOpenGLBuffer indexTextureBuffer;
+    QOpenGLBuffer indexLineBuffer;    
+    QOpenGLTexture *texture;
     GLfloat *vertices;
     GLuint *indices;
+    GLfloat *texcoords;
 
 
     float zoom;

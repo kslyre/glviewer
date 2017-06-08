@@ -63,19 +63,23 @@ void Widget::paintGL()
 
     if(model != NULL){
     shader->bind();
+    texture->bind();
     shader->setUniformValue("modelViewMatrix", modelview);
     shader->setUniformValue("projectionMatrix",camera.projection);
+    //shader->setUniformValue("texture", texture);
     shader->setUniformValue("color", QVector4D(0.5,0.5,1,1));
     shader->setUniformValue("light", QVector3D(0,0,1));
     shader->enableAttributeArray("vertex");
     shader->enableAttributeArray("normal");
+    shader->enableAttributeArray("v_texcoord");
 
     vertexBuffer.bind();
 
-    indexBuffer.bind(); 
+    indexBuffer.bind();
     int polygonsCount =model->polygons.count()*3;
-    shader->setAttributeBuffer("vertex",GL_FLOAT,0,3,6*sizeof(GLfloat));
-    shader->setAttributeBuffer("normal",GL_FLOAT,3*sizeof(GLfloat),3,6*sizeof(GLfloat));
+    shader->setAttributeBuffer("vertex",GL_FLOAT,0,3,sizeof(VertexStruct));
+    shader->setAttributeBuffer("normal",GL_FLOAT,sizeof(QVector3D),3,sizeof(VertexStruct));
+    shader->setAttributeBuffer("v_texcoord",GL_FLOAT,2*sizeof(QVector3D),2,sizeof(VertexStruct));
     shader->setAttributeValue( "view",  zoomMatrix.inverted()*QVector4D(0,0,0,1));
     //qInfo() << modelview.inverted()*QVector4D(0,0,0,1);
     glEnable(GL_POLYGON_OFFSET_FILL);
@@ -84,16 +88,18 @@ void Widget::paintGL()
     glDisable(GL_POLYGON_OFFSET_FILL);
     indexBuffer.release();
 
-    indexLineBuffer.bind();
-    shader->setUniformValue("color",QVector4D(0.8,0.8,0.8,1));
-    shader->setAttributeBuffer("vertex",GL_FLOAT,0,3,6*sizeof(GLuint));
-    glDrawElements(GL_LINES, polygonsCount*2, GL_UNSIGNED_INT, 0);
-    indexLineBuffer.release();
+//    indexLineBuffer.bind();
+//    shader->setUniformValue("color",QVector4D(0.8,0.8,0.8,1));
+//    shader->setAttributeBuffer("vertex",GL_FLOAT,0,3,6*sizeof(GLuint));
+//    glDrawElements(GL_LINES, polygonsCount*2, GL_UNSIGNED_INT, 0);
+//    indexLineBuffer.release();
 
     vertexBuffer.release();
 
+    shader->disableAttributeArray("v_texcoord");
     shader->disableAttributeArray("normal");
     shader->disableAttributeArray("vertex");
+    texture->release();
     shader->release();
     }
 
@@ -249,28 +255,35 @@ void Widget::resetScene()
 
 void Widget::loadVBO()
 {
-    // vertices
-    int countV = model->vertexes.count();
-    vertices = new GLfloat[countV*3*2];
-    for(int i=0; i < countV; i++){
-        vertices[i*6+0] = model->vertexes[i].x();
-        vertices[i*6+1] = model->vertexes[i].y();
-        vertices[i*6+2] = model->vertexes[i].z();
-        //qInfo() << model->normals[i] / model->normals[i].w();
-        model->normals[i] = model->normals[i] / model->normals[i].w();
-        //model->normals[i].toVector3D().normalize();
-        //qInfo() << model->normals[i];
-        vertices[i*6+3] = model->normals[i].x();//model->normals[i].w();
-        vertices[i*6+4] = model->normals[i].y();//model->normals[i].w();
-        vertices[i*6+5] = model->normals[i].z();//model->normals[i].w();
-    }
+//    // vertices
+//    int countV = model->vertexes.count();
+//    int countT = model->polygons.length();//model->textures.length();
+//    vertices = new GLfloat[countV*(3*2) + countT*6];
+//    for(int i=0; i < countV; i++){
+//        vertices[i*6+0] = model->vertexes[i].x();
+//        vertices[i*6+1] = model->vertexes[i].y();
+//        vertices[i*6+2] = model->vertexes[i].z();
+//        model->normals[i] = model->normals[i] / model->normals[i].w();
+//        vertices[i*6+3] = model->normals[i].x();
+//        vertices[i*6+4] = model->normals[i].y();
+//        vertices[i*6+5] = model->normals[i].z();
+//    }
+//    int shft = countV*6;
+//    for(int i=0; i < countT; i++){
+//        vertices[shft+i*6+0] = model->textures[model->polygons[i].polygon[0].texture].x();
+//        vertices[shft+i*6+1] = model->textures[model->polygons[i].polygon[0].texture].y();
+//        vertices[shft+i*6+2] = model->textures[model->polygons[i].polygon[1].texture].x();
+//        vertices[shft+i*6+3] = model->textures[model->polygons[i].polygon[1].texture].y();
+//        vertices[shft+i*6+4] = model->textures[model->polygons[i].polygon[2].texture].x();
+//        vertices[shft+i*6+5] = model->textures[model->polygons[i].polygon[2].texture].y();
+//    }
 
-    vertexBuffer = QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
-    vertexBuffer.create();
-    vertexBuffer.bind();
-    vertexBuffer.allocate(vertices, (countV*3*2)*sizeof(GLfloat));
-    vertexBuffer.release();
-    //delete [] vertices;
+//    vertexBuffer = QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
+//    vertexBuffer.create();
+//    vertexBuffer.bind();
+//    vertexBuffer.allocate(vertices, (countV*(3*2) + countT*6)*sizeof(GLfloat));
+//    vertexBuffer.release();
+//    delete [] vertices;
 
     // http://www.gamedev.ru/code/articles/HLSL?page=4
     // http://steps3d.narod.ru/tutorials/lighting-tutorial.html
@@ -279,13 +292,40 @@ void Widget::loadVBO()
 
     // indices
     // polygons
+    int size = model->polygons.count()*3;
+    VertexStruct *vs = new VertexStruct[size];
+
     int countF = model->polygons.count();
     indices = new GLuint[countF*3+countF*3*2];
     for(int i=0; i < countF; i++){
-        indices[i*3+0] = model->polygons[i].polygon[0].vertex;
-        indices[i*3+1] = model->polygons[i].polygon[1].vertex;
-        indices[i*3+2] = model->polygons[i].polygon[2].vertex;
+        for(int j=0; j < 3; j++){
+            PolyStruct p = model->polygons[i].polygon[j];
+            indices[i*3+j] = i*3+j; //p.vertex;
+            vs[i*3+j].vertex  = model->vertexes[p.vertex];
+            vs[i*3+j].normal  = model->normals[p.vertex].toVector3D();
+            vs[i*3+j].texture = model->textures[p.texture].toVector2D();
+//            vs[i*3+j] = VertexStruct(model->vertexes[p.vertex],
+//                                     model->normals[p.vertex].toVector3D(),
+//                                     model->textures[p.texture].toVector2D());
+//            vs.append(VertexStruct(model->vertexes[p.vertex],
+//                                   model->normals[p.vertex].toVector3D(),
+//                                   model->textures[p.texture].toVector2D()));
+        }
+
+//        indices[i*3+0] = model->polygons[i].polygon[0].vertex;
+//        indices[i*3+1] = model->polygons[i].polygon[1].vertex;
+//        indices[i*3+2] = model->polygons[i].polygon[2].vertex;
     }
+
+    //int size = sizeof(QVector3D)+sizeof(QVector3D)+sizeof(QVector2D);
+    vertexBuffer = QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
+    vertexBuffer.create();
+    vertexBuffer.bind();
+    vertexBuffer.allocate(vs, (size)*sizeof(VertexStruct));
+    vertexBuffer.release();
+    delete [] vs;
+    //delete [] vertices;
+
     // polygon edges
     int shift = countF*3;
     for(int i=0; i < countF; i++){
@@ -308,18 +348,42 @@ void Widget::loadVBO()
     indexLineBuffer.bind();
     indexLineBuffer.allocate((indices+shift), (countF*3*2)*sizeof(GLuint));
     indexLineBuffer.release();
-    //delete [] indices;
+    delete [] indices;
     qInfo() << "VBO loaded";
 
-//    glFunctions->glGenBuffers();
-//    glGenBuffersARB(1, &vboId1);
-//    glBindBufferARB(GL_ARRAY_BUFFER_ARB, vboId1);
-//    glBufferDataARB(GL_ARRAY_BUFFER_ARB, sizeof(vertices), vertices, GL_STATIC_DRAW_ARB);
-//    delete [] vertices;
 
-//    glGenBuffersARB(2, &vboId2);
-//    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, vboId2);
-//    glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, sizeof(indices), indices, GL_STATIC_DRAW_ARB);
-//    delete [] indices;
+//    int countT = model->textures.length();
+//    texcoords = new GLfloat[countT*2];
+//    for(int i=0; i < countT; i++){
+//        texcoords[i*2+0] = model->textures[i].x();
+//        texcoords[i*2+1] = model->textures[i].y();
+//    }
+//    textureBuffer = QOpenGLBuffer();
+//    textureBuffer.create();
+//    textureBuffer.bind();
+//    textureBuffer.allocate(texcoords, (countT*2)*sizeof(GLuint));
+//    textureBuffer.release();
+//    delete [] texcoords;
+
+    texture = new QOpenGLTexture(QImage(":/checker.png"));
+    texture->setMinificationFilter(QOpenGLTexture::Nearest);
+    texture->setMagnificationFilter(QOpenGLTexture::Nearest);
+    texture->setWrapMode(QOpenGLTexture::Repeat);
+
+
+    qInfo() << "Texture loaded";
+}
+
+
+void Widget::trace(){
+    QList<QVector3D> vtrace;
+    for(int i=0; i<model->vertexes.length(); i++){
+        // normal vector from vertex
+        for(int j=0; j<model->vertexes.length(); j++){
+            // calculate line i i+1
+            // vector-line cross point
+            // vtrace.append(point)
+        }
+    }
 }
 

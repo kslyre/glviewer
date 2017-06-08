@@ -34,3 +34,20 @@ struct PolygonStruct
         return ( polygon == p.polygon );
     }
 };
+
+struct VertexStruct
+{
+    QVector3D vertex;
+    QVector3D normal;
+    QVector2D texture;
+
+    VertexStruct(){
+
+    }
+
+    VertexStruct(QVector3D v, QVector3D n, QVector2D t){
+        v = vertex;
+        n = normal;
+        t = texture;
+    }
+};

@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>shader.frag</file>
         <file>shader.vert</file>
+        <file>checker.png</file>
     </qresource>
 </RCC>
