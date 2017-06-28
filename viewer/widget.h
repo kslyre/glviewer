@@ -1,18 +1,20 @@
 #ifndef WIDGET_H
 #define WIDGET_H
 
+
 #include "camera.h"
+#include "modelfactory.h"
+#include "raytrace.h"
 #include <QGLWidget>
 #include <QMatrix4x4>
 #include <QMouseEvent>
 #include <QWheelEvent>
 #include <obj.h>
+#include <bvh.h>
 #include <QtMath>
 #include <QOpenGLShaderProgram>
-#include <QOpenGLBuffer>
 #include <QGLBuffer>
 #include <QOpenGLFunctions>
-#include <QOpenGLTexture>
 
 class Widget : public QGLWidget
 {
@@ -22,16 +24,15 @@ public:
     Widget(QGLWidget *parent = 0);
     ~Widget();
 
-    void fitToView(bool simple);
-    void resetScene();
-    void loadVBO();
+    QList<Model*> models;
 
-    Obj *model;
     QOpenGLShaderProgram *shader = nullptr;
-    //QOpenGLFunctions *glFunctions = nullptr;
+    Model *addModel();
 
-    void loadVBO2();
-    void trace();
+    void modelProjection();
+    void fitToView(bool simple);
+    void resetView();
+    void clearScene();
 protected:
     void initializeGL();
     void resizeGL(int nWidth, int nHeight);
@@ -39,27 +40,15 @@ protected:
 
     void mouseMoveEvent(QMouseEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
-    void mouseReleaseEvent(QMouseEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
-
-
 
 private:
     Camera camera;
 
     QPointF pos;
 
-    GLuint vboId1;
-    GLuint vboId2;
-    QOpenGLBuffer vertexBuffer;
-    QOpenGLBuffer indexBuffer;
-    QOpenGLBuffer indexTextureBuffer;
-    QOpenGLBuffer indexLineBuffer;    
-    QOpenGLTexture *texture;
-    GLfloat *vertices;
-    GLuint *indices;
-    GLfloat *texcoords;
-
+    RayTrace rayTrace;
+    ModelFactory factory;
 
     float zoom;
     QMatrix4x4 zoomMatrix;

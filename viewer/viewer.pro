@@ -19,12 +19,22 @@ SOURCES += main.cpp\
         widget.cpp \
     window.cpp \
     widgettests.cpp \
-    camera.cpp
+    camera.cpp \
+    raytrace.cpp \
+    modelfactory.cpp \
+    bvh.cpp \
+    model.cpp \
+    vbo.cpp
 
 HEADERS  += widget.h \
     window.h \
     widgettests.h \
-    camera.h
+    camera.h \
+    raytrace.h \
+    modelfactory.h \
+    bvh.h \
+    model.h \
+    vbo.h
 
 RESOURCES += \
     resources.qrc

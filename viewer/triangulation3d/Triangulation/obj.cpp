@@ -16,10 +16,12 @@ Obj::~Obj(){
 
 }
 
-void Obj::readObj(QTextStream &textStream)
+bool Obj::readObj(QTextStream &textStream)
 {
     vertexes.clear();
     polygons.clear();
+    int maxVertexInPolygon = 0;
+    bool polyWithTexture = false;
 
     while (!textStream.atEnd()){
         QString line = textStream.readLine();
@@ -31,11 +33,11 @@ void Obj::readObj(QTextStream &textStream)
         // vertexes reading
         bool isVertex = QString::compare(parsedLine.at(0), "v", Qt::CaseInsensitive) == 0;
         if(isVertex){
-            //if(parsedLine.at(1).isEmpty())
-            //    parsedLine.removeAt(1);
-            vertexes.append(QVector3D(parsedLine.at(1).toFloat(),
-                                      parsedLine.at(2).toFloat(),
-                                      parsedLine.at(3).toFloat()));
+            QVector3D vertex = QVector3D(parsedLine.at(1).toFloat(),
+                                         parsedLine.at(2).toFloat(),
+                                         parsedLine.at(3).toFloat());
+            vertexes.append(vertex);
+            proceedBound(vertex, size);
         }
 
         // textures reading
@@ -43,7 +45,7 @@ void Obj::readObj(QTextStream &textStream)
         if(isTexture){
             textures.append(QVector3D(parsedLine.at(1).toFloat(),
                                       parsedLine.at(2).toFloat(),
-                                      parsedLine.at(3).toFloat()));
+                                      parsedLine.length() > 3 ? parsedLine.at(3).toFloat() : 1));
         }
 
         // normals reading
@@ -64,37 +66,23 @@ void Obj::readObj(QTextStream &textStream)
                 int vertex  = polyLine.at(0).toInt()-1;
                 int texture = polyLine.length()==2 ? polyLine.at(1).toInt()-1 : 0;
                 int normal  = polyLine.length()==3 ? polyLine.at(2).toInt()-1 : 0;
-                polygon.polygon.append(PolyStruct(vertex, texture, normal));
+                polygon.list.append(PolygonVertex(vertex, texture, normal));
+                if(polyLine.length()==2)
+                    polyWithTexture = true;
+                if(vertex > maxVertexInPolygon)
+                    maxVertexInPolygon = vertex;
             }
-            polygons.append(polygon);
+            polygons.append(polygon);          
         } 
     }
+    if(vertexes.length() == 0 ||
+            maxVertexInPolygon > vertexes.length() ||
+            (textures.length() == 0 && polyWithTexture))
+            return false;
 
-    // normals calculate
-    normals.clear();
-    foreach (QVector3D v, vertexes) {
-        normals.append(QVector3D(0,0,0).toVector4D());
-    }
 
-    foreach (PolygonStruct f, polygons) {
-        int count = f.polygon.length();
-        for (int i=0; i<count; i++){
-            QVector3D a = i == 0 ?
-                        vertexes[f.polygon[count-1].vertex] - vertexes[f.polygon[i].vertex] :
-                    vertexes[f.polygon[i-1].vertex] - vertexes[f.polygon[i].vertex] ;
-            QVector3D b = i == count-1 ?
-                        vertexes[f.polygon[0].vertex] - vertexes[f.polygon[i].vertex] :
-                    vertexes[f.polygon[i+1].vertex] - vertexes[f.polygon[i].vertex] ;
-            normals[f.polygon[i].vertex] += QVector3D::normal(a, b).toVector4D();
-            normals[f.polygon[i].vertex].setW(normals[f.polygon[i].vertex].w()+1);
-        }
-    }
-    for(int i=0; i<normals.length(); i++){
-        normals[i] /= normals[i].w();
-    }
-//    foreach (QVector4D n, normals) {
-//        n = n / n.w();
-//    }
+    getNormals();
+    return true;
 }
 
 void Obj::writeObj(QTextStream &textStream) const
@@ -118,7 +106,7 @@ void Obj::writeObj(QTextStream &textStream) const
     // polygons writing
     foreach (PolygonStruct f, polygons) {
         textStream << "f ";
-        foreach (PolyStruct p, f.polygon) {
+        foreach (PolygonVertex p, f.list) {
             textStream << p.vertex+1;
             if(p.texture != 0)
                 textStream << "/" << p.texture+1;
@@ -131,3 +119,70 @@ void Obj::writeObj(QTextStream &textStream) const
     textStream << "# " << polygons.length() << " polygons" << endl;
 }
 
+void Obj::getNormals()
+{
+    // normals calculate
+    normals.clear();
+    foreach (QVector3D v, vertexes) {
+        normals.append(QVector3D(0,0,0).toVector4D());
+    }
+
+    foreach (PolygonStruct f, polygons) {
+        int count = f.list.length();
+        for (int i=0; i<count; i++){
+            QVector3D a = i == 0 ?
+                        vertexes[f.list[count-1].vertex] - vertexes[f.list[i].vertex] :
+                    vertexes[f.list[i-1].vertex] - vertexes[f.list[i].vertex] ;
+            QVector3D b = i == count-1 ?
+                        vertexes[f.list[0].vertex] - vertexes[f.list[i].vertex] :
+                    vertexes[f.list[i+1].vertex] - vertexes[f.list[i].vertex] ;
+            normals[f.list[i].vertex] += QVector3D::normal(a, b).toVector4D();
+            normals[f.list[i].vertex].setW(normals[f.list[i].vertex].w()+1);
+        }
+    }
+    for(int i=0; i<normals.length(); i++){
+        normals[i] /= normals[i].w();
+    }
+}
+
+void Obj::getBounds(QList<QVector3D> vertexes, QList<PolygonStruct> polygons)
+{
+    for(int poly=0; poly<polygons.length(); poly++){
+    //foreach (PolygonStruct f, polygons){
+        Box bound;
+        //bound.polyIndex = poly;
+        foreach (PolygonVertex p, polygons[poly].list) {
+            QVector3D v = vertexes[p.vertex];
+
+            if (v.x() < bound.min.x())
+                bound.min.setX(v.x());
+            if (v.y() < bound.min.y())
+                bound.min.setY(v.y());
+            if (v.z() < bound.min.z())
+                bound.min.setZ(v.z());
+            if (v.x() > bound.max.x())
+                bound.max.setX(v.x());
+            if (v.y() > bound.max.y())
+                bound.max.setY(v.y());
+            if (v.z() > bound.max.z())
+                bound.max.setZ(v.z());
+        }
+        //polyBounds.append(bound);
+    }
+}
+
+void Obj::proceedBound(QVector3D vertex, Box &box)
+{
+    if (vertex.x() < box.min.x())
+        box.min.setX(vertex.x());
+    if (vertex.y() < box.min.y())
+        box.min.setY(vertex.y());
+    if (vertex.z() < box.min.z())
+        box.min.setZ(vertex.z());
+    if (vertex.x() > box.max.x())
+        box.max.setX(vertex.x());
+    if (vertex.y() > box.max.y())
+        box.max.setY(vertex.y());
+    if (vertex.z() > box.max.z())
+        box.max.setZ(vertex.z());
+}

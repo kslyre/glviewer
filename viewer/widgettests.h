@@ -10,8 +10,15 @@ class WidgetTests : public QObject
 public:
     explicit WidgetTests(QObject *parent = 0);
 private slots:
-    void test01();
+    void testNormalRay1();
 
+    void testNormalRay2();
+    void testZeroTriangle();
+    void testZeroRayTriangle();
+    void testNonZeroRay();
+    void testParallelRay();
+    void testTraceBoxTrue();
+    void testTraceBoxFalse();
 signals:
 
 public slots:

@@ -1,23 +1,21 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
-#endif // STRUCTS_H
-
 #include <QList>
 
-struct PolyStruct
+struct PolygonVertex
 {
     int vertex;
     int texture;
     int normal;
 
-    PolyStruct(int v, int vt=0, int n=0){
+    PolygonVertex(int v, int vt=0, int n=0){
         vertex = v;
         texture = vt;
         normal = n;
     }
 
-    inline bool operator== (const PolyStruct &p) const
+    inline bool operator== (const PolygonVertex &p) const
     {
         return ( (vertex == p.vertex) &
                  (texture == p.texture) &
@@ -27,11 +25,11 @@ struct PolyStruct
 
 struct PolygonStruct
 {
-    QList<PolyStruct> polygon;
+    QList<PolygonVertex> list;
 
     inline bool operator== (const PolygonStruct &p) const
     {
-        return ( polygon == p.polygon );
+        return ( list == p.list );
     }
 };
 
@@ -51,3 +49,28 @@ struct VertexStruct
         t = texture;
     }
 };
+
+struct Box
+{
+    QVector3D min = QVector3D(999,999,999);
+    QVector3D max = QVector3D(-999,-999,-999);
+    int polyIndex = 0;
+};
+
+enum Axis
+{
+    X, Y, Z
+};
+
+struct Divider
+{
+    Axis axis;
+    double value;   // median value
+
+    Divider(Axis a, double v){
+        axis = a;
+        value = v;
+    }
+};
+
+#endif // STRUCTS_H

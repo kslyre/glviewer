@@ -8,6 +8,15 @@
 #include <obj.h>
 #include <triangulation.h>
 
+enum ERRORS
+{
+    NO_ERRORS,
+    CANT_OPEN_FILE,
+    BAD_OBJ_FILE,
+    MODELS_COUNT
+};
+
+
 class Window : public QWidget
 {
     Q_OBJECT
@@ -20,10 +29,11 @@ public slots:
 
 private:
     Widget *glwidget;
-    //Obj *model;
 
     QPushButton *createButton(QString text);
-    bool openFile();
+    ERRORS openFile(Model *model, QString filepath = nullptr);
+    ERRORS writeFile(Obj *model);
+    bool showErrorMessage(ERRORS error);
 };
 
 #endif // WINDOW_H
