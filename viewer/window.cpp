@@ -1,8 +1,4 @@
 #include "window.h"
-#include <QErrorMessage>
-#include <QGridLayout>
-#include <QListWidget>
-#include <QMessageBox>
 
 Window::Window()
 {
@@ -19,61 +15,15 @@ Window::Window()
     QPushButton *resetButton = createButton(tr("Reset"));
     QPushButton *fitButton = createButton(tr("Perfect Fit"));
     QPushButton *projButton = createButton(tr("Projection"));
-    QListWidget *modelList = new QListWidget();
+    modelList = new QListWidget();
 
-    connect(openButton, &QPushButton::clicked, [=](){        
-        ModelFactory f;
-        Model* model = f.createModel();
-        int res;
-        if(res = openFile(model) == 0){
-            glwidget->models.append(model);
-            //Model* model = glwidget->addModel();
-            model->vbo.loadVBO(model->obj);
-            model->bvh.buildBVH(model->obj);
-
-            QListWidgetItem* item = new QListWidgetItem(model->name, modelList);
-            item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-            item->setCheckState(Qt::Checked);
-            glwidget->fitToView(true);
-        }
-        else {
-            showErrorMessage((ERRORS)res);
-        }
-    });
-    connect(saveButton, &QPushButton::clicked, [=](){
-        int res;
-        if(res = writeFile(glwidget->models[modelList->currentRow()]->obj) != 0);
-        showErrorMessage((ERRORS)res);
-    });
-    connect(clearButton, &QPushButton::clicked, [=](){
-        glwidget->clearScene();
-        modelList->clear();
-    });
-    connect(resetButton, &QPushButton::clicked, [=](){
-        glwidget->resetView(); });
-    connect(fitButton, &QPushButton::clicked, [=](){
-        glwidget->fitToView(false); });
-    connect(projButton, &QPushButton::clicked, [=](){
-        if(glwidget->models.count() == 2){
-            //glwidget->addModel();
-            glwidget->modelProjection();
-
-            QListWidgetItem* item = new QListWidgetItem("proj", modelList);
-            item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-            item->setCheckState(Qt::Checked);
-        }
-        else {
-            showErrorMessage(ERRORS::MODELS_COUNT);
-        }
-    });
-
-    connect(modelList, &QListWidget::itemClicked, [=](){
-        if(modelList->currentRow() >= 0){
-            bool checked = modelList->currentItem()->checkState() == Qt::Checked;
-            glwidget->models[modelList->currentRow()]->visible = checked;
-            glwidget->update();
-        }
-    });
+    connect(openButton,  &QPushButton::clicked, this, &Window::openFileButton);
+    connect(saveButton,  &QPushButton::clicked, this, &Window::saveFileButton);
+    connect(clearButton, &QPushButton::clicked, this, &Window::clearViewport);
+    connect(resetButton, &QPushButton::clicked, glwidget, &Widget::resetView);
+    connect(fitButton,   &QPushButton::clicked, this, &Window::perfectFit);
+    connect(projButton,  &QPushButton::clicked, this, &Window::projection);
+    connect(modelList,   &QListWidget::itemClicked, this, &Window::listClick);
 
     QGridLayout *layout = new QGridLayout;
     layout->addWidget(openButton, 0,0, 1,3);
@@ -149,6 +99,8 @@ ERRORS Window::writeFile(Obj *model){
                                             tr("Save model file"),
                                             QDir::currentPath(),
                                             tr("Model Files (*.obj)"));
+    if(filename.length() < 1)
+        return ERRORS::NO_ERRORS;
     QFile file(filename);
     if(!file.open(QIODevice::WriteOnly))
         return ERRORS::CANT_OPEN_FILE;
@@ -181,4 +133,69 @@ bool Window::showErrorMessage(ERRORS error)
     msg.setText(errtext);
     msg.exec();
     return true;
+}
+
+void Window::openFileButton()
+{
+    ModelFactory f;
+    Model* model = f.createModel();
+    ERRORS res;
+    if((res = openFile(model)) == ERRORS::NO_ERRORS){
+        glwidget->models.append(model);
+        model->vbo.loadVBO(model->obj);
+        model->bvh.buildBVH(model->obj);
+
+        QListWidgetItem* item = new QListWidgetItem(model->name, modelList);
+        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+        item->setCheckState(Qt::Checked);
+        glwidget->fitToView(true);
+    }
+    else {
+        showErrorMessage(res);
+    }
+}
+
+void Window::saveFileButton()
+{
+    if(modelList->count() < 1)
+        return;
+    ERRORS res;
+    if((res = writeFile(glwidget->models[modelList->currentRow()]->obj)) != ERRORS::NO_ERRORS);
+        showErrorMessage(res);
+}
+
+void Window::clearViewport()
+{
+    glwidget->clearScene();
+    modelList->clear();
+}
+
+void Window::perfectFit()
+{
+    glwidget->fitToView(false);
+}
+
+void Window::projection()
+{
+    if(glwidget->models.count() == 2){
+        glwidget->modelProjection();
+
+        QListWidgetItem* item = new QListWidgetItem("proj", modelList);
+        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+        item->setCheckState(Qt::Checked);
+    }
+    else {
+        showErrorMessage(ERRORS::MODELS_COUNT);
+    }
+}
+
+void Window::listClick(QListWidgetItem* item)
+{
+    QListWidget *temp = new QListWidget();
+    temp = item->listWidget();
+    if(temp->row(item) >= 0){
+        bool checked = item->checkState() == Qt::Checked;
+        glwidget->models[temp->row(item)]->visible = checked;
+        glwidget->update();
+    }
 }

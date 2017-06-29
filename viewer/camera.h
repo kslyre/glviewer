@@ -12,12 +12,12 @@ public:
 
     QMatrix4x4 projection;
 
-    float distance;
+    float fov;
     float aspectRatio;
     float nearField;
     float farField;
 
-    void setProjection(float distance, float ratio, float nearField, float farField);
+    void setProjection(float fov, float ratio, float nearField, float farField);
 };
 
 #endif // CAMERA_H

@@ -21,7 +21,9 @@ bool Obj::readObj(QTextStream &textStream)
     vertexes.clear();
     polygons.clear();
     int maxVertexInPolygon = 0;
+    int maxTextureInPolygon = 0;
     bool polyWithTexture = false;
+    bool parseOk = true;
 
     while (!textStream.atEnd()){
         QString line = textStream.readLine();
@@ -30,12 +32,17 @@ bool Obj::readObj(QTextStream &textStream)
         if(parsedLine.empty())
             continue;
 
+        bool okx, oky, okz;
         // vertexes reading
         bool isVertex = QString::compare(parsedLine.at(0), "v", Qt::CaseInsensitive) == 0;
         if(isVertex){
-            QVector3D vertex = QVector3D(parsedLine.at(1).toFloat(),
-                                         parsedLine.at(2).toFloat(),
-                                         parsedLine.at(3).toFloat());
+            QVector3D vertex = QVector3D(parsedLine.at(1).toFloat(&okx),
+                                         parsedLine.at(2).toFloat(&oky),
+                                         parsedLine.at(3).toFloat(&okz));
+
+            if(!(parseOk = okx && oky && okz))
+                break;
+
             vertexes.append(vertex);
             proceedBound(vertex, size);
         }
@@ -43,17 +50,23 @@ bool Obj::readObj(QTextStream &textStream)
         // textures reading
         bool isTexture = QString::compare(parsedLine.at(0), "vt", Qt::CaseInsensitive) == 0;
         if(isTexture){
-            textures.append(QVector3D(parsedLine.at(1).toFloat(),
-                                      parsedLine.at(2).toFloat(),
-                                      parsedLine.length() > 3 ? parsedLine.at(3).toFloat() : 1));
+            textures.append(QVector3D(parsedLine.at(1).toFloat(&okx),
+                                      parsedLine.at(2).toFloat(&oky),
+                                      parsedLine.length() > 3 ? parsedLine.at(3).toFloat(&okz) : 1));
+
+            if(!(parseOk = okx && oky && okz))
+                break;
         }
 
         // normals reading
         bool isNormal = QString::compare(parsedLine.at(0), "vn", Qt::CaseInsensitive) == 0;
         if(isNormal){
-            normals.append(QVector3D(parsedLine.at(1).toFloat(),
-                                     parsedLine.at(2).toFloat(),
-                                     parsedLine.at(3).toFloat()).toVector4D());
+            normals.append(QVector3D(parsedLine.at(1).toFloat(&okx),
+                                     parsedLine.at(2).toFloat(&oky),
+                                     parsedLine.at(3).toFloat(&okz)).toVector4D());
+
+            if(!(parseOk = okx && oky && okz))
+                break;
         }
 
         // polygons reading
@@ -61,23 +74,31 @@ bool Obj::readObj(QTextStream &textStream)
         if(isPolygon){
             PolygonStruct polygon;
             for(int i=1; i < parsedLine.length(); i++){
-                line = parsedLine.at(i);
-                QStringList polyLine = line.split('/');
-                int vertex  = polyLine.at(0).toInt()-1;
-                int texture = polyLine.length()==2 ? polyLine.at(1).toInt()-1 : 0;
-                int normal  = polyLine.length()==3 ? polyLine.at(2).toInt()-1 : 0;
+                QString polyLine = parsedLine.at(i);
+                QStringList polyVertexLine = polyLine.split('/');
+                int vertex  = polyVertexLine.at(0).toInt(&okx)-1;
+                int texture = polyVertexLine.length()==2 ? polyVertexLine.at(1).toInt(&oky)-1 : 0;
+                int normal  = polyVertexLine.length()==3 ? polyVertexLine.at(2).toInt(&okz)-1 : 0;
+
+                if(!(parseOk = okx && oky && okz))
+                    break;
+
                 polygon.list.append(PolygonVertex(vertex, texture, normal));
-                if(polyLine.length()==2)
+                if(polyVertexLine.length()==2)
                     polyWithTexture = true;
                 if(vertex > maxVertexInPolygon)
                     maxVertexInPolygon = vertex;
+                if(texture > maxTextureInPolygon)
+                    maxTextureInPolygon = texture;
             }
             polygons.append(polygon);          
         } 
     }
-    if(vertexes.length() == 0 ||
-            maxVertexInPolygon > vertexes.length() ||
-            (textures.length() == 0 && polyWithTexture))
+    if(vertexes.length() == 0 || polygons.length() == 0 ||
+       (textures.length() == 0 && polyWithTexture) ||
+       !parseOk ||
+       maxVertexInPolygon+1 != vertexes.length() ||
+       maxTextureInPolygon+1 != textures.length())
             return false;
 
 

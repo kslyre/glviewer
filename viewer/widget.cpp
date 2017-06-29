@@ -175,10 +175,10 @@ void Widget::fitToView(bool simple)
     }
 
     zoom = radius / qSin(40);
-    float nearf = 1.f;
+    float nearf = camera.nearField;
     QVector3D cameraPos = QVector3D(0,0,zoom);
     QVector3D cameraNFPos = QVector3D(0,0,zoom-nearf);
-    QVector3D NFPosY = QVector3D(0, 1/qCos(qDegreesToRadians(40.f))*nearf, cameraNFPos.z());
+    QVector3D NFPosY = QVector3D(0, 1/qCos(qDegreesToRadians(camera.fov/2))*nearf, cameraNFPos.z());
 
     QVector3D fovLineVector = NFPosY - cameraPos;
     //QVector3D rv = tn - center;
@@ -188,10 +188,11 @@ void Widget::fitToView(bool simple)
     QVector3D prevFovPoint = NFPosY - r01/fovLineVector.length()*fovLineVector;
     QVector3D radiusFovPoint = (prevFovPoint-center).normalized()*radius;
     float coef; // = radius / ; // else - revert and -res
-    float distance = (radius - (radiusFovPoint-prevFovPoint).length()) * zoom;
+    float distance = (radius - (radiusFovPoint-prevFovPoint).length());// / zoom;
 
     coef = distance / radius;
     zoom = coef + nearf;
+    qInfo() << zoom << distance << radius << coef;
     update();
 }
 

@@ -4,6 +4,10 @@
 #include <QWidget>
 #include <QPushButton>
 #include <QFileDialog>
+#include <QListWidget>
+#include <QErrorMessage>
+#include <QGridLayout>
+#include <QMessageBox>
 #include "widget.h"
 #include <obj.h>
 #include <triangulation.h>
@@ -27,8 +31,16 @@ signals:
 
 public slots:
 
+private slots:
+    void openFileButton();
+    void saveFileButton();
+    void clearViewport();
+    void perfectFit();
+    void projection();
+    void listClick(QListWidgetItem *item);
 private:
     Widget *glwidget;
+    QListWidget *modelList;
 
     QPushButton *createButton(QString text);
     ERRORS openFile(Model *model, QString filepath = nullptr);
