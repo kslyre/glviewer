@@ -95,10 +95,10 @@ bool Obj::readObj(QTextStream &textStream)
         } 
     }
     if(vertexes.length() == 0 || polygons.length() == 0 ||
-       (textures.length() == 0 && polyWithTexture) ||
+       //(textures.length() == 0 && polyWithTexture) ||
        !parseOk ||
-       maxVertexInPolygon+1 != vertexes.length() ||
-       maxTextureInPolygon+1 != textures.length())
+       maxVertexInPolygon+1 != vertexes.length())// ||
+       //maxTextureInPolygon+1 != textures.length())
             return false;
 
 

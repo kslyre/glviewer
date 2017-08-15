@@ -1,3 +1,4 @@
+#include "derivable.h"
 #include "widgettests.h"
 
 WidgetTests::WidgetTests(QObject *parent) : QObject(parent)
@@ -111,5 +112,13 @@ void WidgetTests::testTraceBoxFalse()
     bool res = w->traceBox(vertex, normal, box);
 
     QCOMPARE(res, false);
+}
+
+void WidgetTests::sqrtDeriv()
+{
+    Derivable d;
+    d = d.sqrt(20);
+    qDebug() << d.getValue() << d.getDerivative();
+    QCOMPARE(1,1);
 }
 

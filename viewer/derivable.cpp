@@ -55,3 +55,8 @@ Derivable Derivable::pow(Derivable f, double val)
 {
     return Derivable(qPow(f.val, val), val*qPow(f.val, val-1.f)*f.deriv);
 }
+
+Derivable Derivable::sqrt(Derivable f)
+{
+    return Derivable(qSqrt(f.val), 1.f/(2.f*qSqrt(f.val)));
+}

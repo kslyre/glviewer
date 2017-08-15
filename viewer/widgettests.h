@@ -19,6 +19,7 @@ private slots:
     void testParallelRay();
     void testTraceBoxTrue();
     void testTraceBoxFalse();
+    void sqrtDeriv();
 signals:
 
 public slots:

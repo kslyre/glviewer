@@ -24,7 +24,7 @@ Window::Window()
     connect(resetButton, &QPushButton::clicked, glwidget, &Widget::resetView);
     connect(fitButton,   &QPushButton::clicked, this, &Window::perfectFit);
     connect(projButton,  &QPushButton::clicked, this, &Window::projection);
-    connect(icpButton,  &QPushButton::clicked, this, &Window::icpGN);
+    connect(icpButton,  &QPushButton::clicked, this, &Window::gaussNewton);
     connect(modelList,   &QListWidget::itemClicked, this, &Window::listClick);
 
     QGridLayout *layout = new QGridLayout;
@@ -205,5 +205,14 @@ void Window::listClick(QListWidgetItem* item)
 
 void Window::gaussNewton()
 {
-    glwidget->gaussNewton();
+    if(glwidget->models.count() == 2){
+        glwidget->gaussNewton();
+
+        QListWidgetItem* item = new QListWidgetItem("icp", modelList);
+        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+        item->setCheckState(Qt::Checked);
+    }
+    else {
+        showErrorMessage(ERRORS::MODELS_COUNT);
+    }
 }

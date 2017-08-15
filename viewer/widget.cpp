@@ -229,19 +229,34 @@ void Widget::modelProjection()
 
 void Widget::gaussNewton()
 {
+    addModel();
     Optimizations opt;
 
     QVector<double> vector = { 1,1,1,1,1,1,1 };
-    Functor sf = Functor(models[0]->obj->polygons.toVector(),
-                         models[1]->obj->polygons.toVector(), ProblemVector(vector));
+    //double lv = 1e-5;
+    //QVector<double> vector = { 0, 0, 0, 0, 0, 0, 0 };
+    Functor sf = Functor(models[0]->obj->vertexes.toVector(),
+                         models[1]->obj->vertexes.toVector(), ProblemVector(vector));
 
+    int num = 0;
     ProblemVector pv = opt.gaussNewton(sf);
-    while(pv.goNext){
+    while(pv.goNext && num < 30){
         sf.probVector = pv;
         pv = opt.gaussNewton(sf);
         // apply mod to points
-        models[1]->vbo.loadVBO(models[1]->modifyObj(pv));
+        qDebug() << num++;
     }
+    qDebug() << pv.params;
+
+    models[2]->obj->vertexes = models[1]->modifyVertexes(pv);
+    models[2]->obj->textures = models[1]->obj->textures;
+    models[2]->obj->polygons = models[1]->obj->polygons;
+    models[2]->obj->getNormals();
+    models[2]->randomColor();
+    models[2]->vbo.loadVBO(models[2]->obj);
+    models[2]->bvh.buildBVH(models[2]->obj);
+    update();
+    //models[1]->vbo.loadVBO(models[1]->modifyObj(pv));
 }
 
 // add model to list

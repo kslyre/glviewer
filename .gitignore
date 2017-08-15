@@ -51,3 +51,4 @@ Temporary Items
 
 # Build directories
 build*/
+Eigen*/

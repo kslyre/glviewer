@@ -31,6 +31,7 @@ public:
 
     Derivable operator *(const float &f2) const;
     QVector<Derivable> operator *(const QVector<Derivable> &f2) const;
+    Derivable sqrt(Derivable f);
 };
 
 #endif // DERIVABLE_H

@@ -19,14 +19,23 @@ void Model::randomColor()
     color = QVector4D(my_rand(2),my_rand(2),my_rand(2),1);
 }
 
-Obj Model::modifyObj(ProblemVector res)
+QList<QVector3D> Model::modifyVertexes(ProblemVector res)
 {
-    Obj* objm = new Obj(obj->vertexes, obj->textures, obj->polygons);
+    //Obj* objm = new Obj(obj->vertexes, obj->textures, obj->polygons);
 
-    double w = res.params[0];
-    double x = res.params[1];
-    double y = res.params[2];
-    double z = res.params[3];
+    QList<QVector3D> list;
+    double norm = qSqrt(qPow(res.params[0],2) +
+            qPow(res.params[1],2) +
+            qPow(res.params[2],2) +
+            qPow(res.params[3],2));
+
+    //if(norm*norm < 1.f)
+    //    norm = 1.f;
+
+    double w = res.params[0]/norm;
+    double x = res.params[1]/norm;
+    double y = res.params[2]/norm;
+    double z = res.params[3]/norm;
 
     Matrix<double, 3,3> qm;
     qm << 1- 2*y*y- 2*z*z,
@@ -52,12 +61,11 @@ Obj Model::modifyObj(ProblemVector res)
 
         Matrix<double, 3, 1> resv = qm * point2v + tv;
 
-        obj->vertexes[i].setX(resv(0));
-        obj->vertexes[i].setY(resv(1));
-        obj->vertexes[i].setZ(resv(2));
+        list.append(QVector3D(resv(0), resv(1), resv(2)));
     }
 
-    objm->getNormals();
+    //objm->getNormals();
+    return list;
 }
 
 double Model::my_rand(int accuracy)
