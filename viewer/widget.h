@@ -33,6 +33,7 @@ public:
     void fitToView(bool simple);
     void resetView();
     void clearScene();
+    void gaussNewton();
 protected:
     void initializeGL();
     void resizeGL(int nWidth, int nHeight);

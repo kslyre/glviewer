@@ -29,14 +29,13 @@ public:
 
 signals:
 
-public slots:
-
 private slots:
     void openFileButton();
     void saveFileButton();
     void clearViewport();
     void perfectFit();
     void projection();
+    void gaussNewton();
     void listClick(QListWidgetItem *item);
 private:
     Widget *glwidget;

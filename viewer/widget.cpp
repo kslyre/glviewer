@@ -1,3 +1,4 @@
+#include "optimizations.h"
 #include "widget.h"
 
 Widget::Widget(QGLWidget *parent)
@@ -224,6 +225,23 @@ void Widget::modelProjection()
     models[2]->randomColor();
     models[2]->vbo.loadVBO(models[2]->obj);
     models[2]->bvh.buildBVH(models[2]->obj);
+}
+
+void Widget::gaussNewton()
+{
+    Optimizations opt;
+
+    QVector<double> vector = { 1,1,1,1,1,1,1 };
+    Functor sf = Functor(models[0]->obj->polygons.toVector(),
+                         models[1]->obj->polygons.toVector(), ProblemVector(vector));
+
+    ProblemVector pv = opt.gaussNewton(sf);
+    while(pv.goNext){
+        sf.probVector = pv;
+        pv = opt.gaussNewton(sf);
+        // apply mod to points
+        models[1]->vbo.loadVBO(models[1]->modifyObj(pv));
+    }
 }
 
 // add model to list

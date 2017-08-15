@@ -73,4 +73,34 @@ struct Divider
     }
 };
 
+
+class ProblemVector
+{
+public:
+    QVector<double> params;
+    bool goNext = true;
+
+    ProblemVector()
+    { }
+
+    ProblemVector(QVector<double> vector)
+    {
+        params = vector;
+    }
+
+    inline ProblemVector operator +(const ProblemVector &v) const
+    {
+        QVector<double> res = {
+            params[0] + v.params[0],
+                            params[1] + v.params[1],
+                            params[2] + v.params[2],
+                            params[3] + v.params[3],
+                            params[4] + v.params[4],
+                            params[5] + v.params[5],
+                            params[6] + v.params[6]
+        };
+        return ProblemVector(res);
+    }
+};
+
 #endif // STRUCTS_H

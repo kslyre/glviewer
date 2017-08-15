@@ -24,7 +24,10 @@ SOURCES += main.cpp\
     modelfactory.cpp \
     bvh.cpp \
     model.cpp \
-    vbo.cpp
+    vbo.cpp \
+    derivable.cpp \
+    functors.cpp \
+    optimizations.cpp
 
 HEADERS  += widget.h \
     window.h \
@@ -34,7 +37,10 @@ HEADERS  += widget.h \
     modelfactory.h \
     bvh.h \
     model.h \
-    vbo.h
+    vbo.h \
+    derivable.h \
+    functors.h \
+    optimizations.h
 
 RESOURCES += \
     resources.qrc

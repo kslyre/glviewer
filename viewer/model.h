@@ -20,6 +20,7 @@ public:
     Obj *obj;
 
     void randomColor();
+    Obj modifyObj(ProblemVector res);
 private:
     double my_rand(int accuracy);
 };

@@ -15,6 +15,7 @@ Window::Window()
     QPushButton *resetButton = createButton(tr("Reset"));
     QPushButton *fitButton = createButton(tr("Perfect Fit"));
     QPushButton *projButton = createButton(tr("Projection"));
+    QPushButton *icpButton = createButton(tr("ICP"));
     modelList = new QListWidget();
 
     connect(openButton,  &QPushButton::clicked, this, &Window::openFileButton);
@@ -23,6 +24,7 @@ Window::Window()
     connect(resetButton, &QPushButton::clicked, glwidget, &Widget::resetView);
     connect(fitButton,   &QPushButton::clicked, this, &Window::perfectFit);
     connect(projButton,  &QPushButton::clicked, this, &Window::projection);
+    connect(icpButton,  &QPushButton::clicked, this, &Window::icpGN);
     connect(modelList,   &QListWidget::itemClicked, this, &Window::listClick);
 
     QGridLayout *layout = new QGridLayout;
@@ -32,6 +34,7 @@ Window::Window()
     layout->addWidget(resetButton, 0,9, 1,3);
     layout->addWidget(fitButton, 0,12, 1,3);
     layout->addWidget(projButton, 0,16, 1,3);
+    layout->addWidget(icpButton, 0,19, 1,3);
     layout->addWidget(glwidget,   1,0, 20,20);
     layout->addWidget(modelList,  1,20, 8,2);
 
@@ -198,4 +201,9 @@ void Window::listClick(QListWidgetItem* item)
         glwidget->models[temp->row(item)]->visible = checked;
         glwidget->update();
     }
+}
+
+void Window::gaussNewton()
+{
+    glwidget->gaussNewton();
 }
