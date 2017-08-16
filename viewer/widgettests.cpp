@@ -116,9 +116,17 @@ void WidgetTests::testTraceBoxFalse()
 
 void WidgetTests::sqrtDeriv()
 {
-    Derivable d;
-    d = d.sqrt(20);
+    Derivable d = Derivable::IndependendVariable(20);
+    d = d.sqrt(d);
     qDebug() << d.getValue() << d.getDerivative();
+    QCOMPARE(1,1);
+}
+
+void WidgetTests::multDeriv()
+{
+    Derivable d1 = Derivable::IndependendVariable(10);
+    Derivable d2 = Derivable::IndependendVariable(10);
+    qDebug() << (d1*d2).getDerivative();
     QCOMPARE(1,1);
 }
 

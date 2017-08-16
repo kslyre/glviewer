@@ -1,4 +1,5 @@
 #include "functors.h"
+#include <QtTest>
 
 Functor::Functor()
 {
@@ -57,12 +58,14 @@ QVector<Derivable> Functor::f(ProblemVector pv, int index, int indexParam)
             qPow(pv.params[3],2));
     //if(norm1*norm1 < 1.f)
     //    norm1 = 1.f;
+    if(norm1 < 1e-8)
+        norm1 = 1;
 
     for(int i=0; i<pvLength(); i++){
         Derivable xD;
         double value = pv.params[i];
-        if(i < 4)
-            value /= norm1;
+        //if(i < 4)
+        //    value /= norm1;
 
         if(i == indexParam)
             xD = Derivable::IndependendVariable(value);
@@ -78,31 +81,41 @@ QVector<Derivable> Functor::f(ProblemVector pv, int index, int indexParam)
     Derivable y = pvD[2];
     Derivable z = pvD[3];
 
-    /*Derivable norm = w.sqrt(w.pow(w, 2) + w.pow(x,2) + w.pow(y,2) + w.pow(z, 2));
+    Derivable norm = w.sqrt(w.pow(w, 2) + w.pow(x,2) + w.pow(y,2) + w.pow(z, 2));
 
     w = w / norm;
     x = x / norm;
     y = y / norm;
-    z = z / norm;*/
+    z = z / norm;
 
     Matrix<Derivable, 3,3> qm;
-    qm << Derivable(1)- Derivable(2)*y*y- Derivable(2)*z*z,
+    qm << Derivable(1.f)- Derivable(2)*y*y- Derivable(2)*z*z,
             Derivable(2)*x*y - Derivable(2)*z*w,
             Derivable(2)*x*z + Derivable(2)*y*w,
 
           Derivable(2)*x*y + Derivable(2)*z*w,
-            Derivable(1)- Derivable(2)*x*x- Derivable(2)*z*z,
+            Derivable(1.f)- Derivable(2)*x*x- Derivable(2)*z*z,
             Derivable(2)*y*z - Derivable(2)*x*w,
 
           Derivable(2)*x*z - Derivable(2)*y*w,
             Derivable(2)*y*z + Derivable(2)*x*w,
-            Derivable(1)- Derivable(2)*x*x- Derivable(2)*y*y;
+            Derivable(1.f)- Derivable(2)*x*x- Derivable(2)*y*y;
 
     Matrix<Derivable, 3, 1> tv;
     tv << pvD[4], pvD[5], pvD[6];
 
     Matrix<Derivable, 3, 1> resv;
 
+    /*qDebug() << Derivable(1.f).getDerivative()
+             << (Derivable(2)*y*y).getDerivative()
+             << (Derivable(2)*z*z).getDerivative();
+    for(int i=0;i<3;i++){
+        QString s = "";
+        for(int j=0;j<3;j++){
+            s += QString::number(qm(i,j).getDerivative()) + " ";
+        }
+        qDebug() << s;
+    }*/
 
     if(index != -1){
         Matrix<Derivable, 3, 1> point2v;

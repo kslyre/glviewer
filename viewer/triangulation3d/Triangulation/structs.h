@@ -2,6 +2,7 @@
 #define STRUCTS_H
 
 #include <QList>
+#include <QtMath>
 
 struct PolygonVertex
 {
@@ -88,6 +89,13 @@ public:
         params = vector;
     }
 
+    ProblemVector(double value, int length)
+    {
+        for(int i=0; i<length; i++){
+            params.append(value);
+        }
+    }
+
     inline ProblemVector operator +(const ProblemVector &v) const
     {
         QVector<double> res = {
@@ -100,6 +108,28 @@ public:
                             params[6] + v.params[6]
         };
         return ProblemVector(res);
+    }
+
+    inline ProblemVector operator -(const ProblemVector &v) const
+    {
+        QVector<double> res = {
+            params[0] - v.params[0],
+                            params[1] - v.params[1],
+                            params[2] - v.params[2],
+                            params[3] - v.params[3],
+                            params[4] - v.params[4],
+                            params[5] - v.params[5],
+                            params[6] - v.params[6]
+        };
+        return ProblemVector(res);
+    }
+
+    double Length(){
+        double res = 0;
+        foreach (double d, params) {
+            res += d*d;
+        }
+        return qSqrt(res);
     }
 };
 

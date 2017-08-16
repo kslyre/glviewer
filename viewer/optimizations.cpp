@@ -53,17 +53,24 @@ ProblemVector Optimizations::gaussNewton(Functor functor)
     MatrixXf x = a.llt().solve(-b);
 
     QVector<double> vector = { x(0), x(1), x(2), x(3), x(4), x(5), x(6) };
-    ProblemVector nextIter = functor.probVector + ProblemVector(vector);
+    ProblemVector add = ProblemVector(vector);
+    ProblemVector nextIter = functor.probVector + add;
     qDebug() << ProblemVector(vector).params;
     double err = (functor.func(nextIter) - functor.func(functor.probVector)).length();
-    qDebug() << functor.func(nextIter) << err;
-    go = err > 1e-1;
+    qDebug() << functor.func(nextIter) << err << "|" << add.Length();
+    go = (err > 1e-6) & (qAbs(nextIter.Length() - functor.probVector.Length()) > 1e-5);
+    //qDebug() << (nextIter - functor.probVector).Length();
     //min = err < 1e-5;
 
     if(err != err) {
         go = false;
     }
-    functor.probVector = nextIter;
+    //if(nextIter.params[0] > 1e+6)
+    //    go = false;
+    //if(nextIter.Length() < functor.probVector.Length())
+    //    go = false;
+    if(go)
+        functor.probVector = nextIter;
 
     functor.probVector.goNext = go;
     return functor.probVector;

@@ -20,6 +20,7 @@ private slots:
     void testTraceBoxTrue();
     void testTraceBoxFalse();
     void sqrtDeriv();
+    void multDeriv();
 signals:
 
 public slots:

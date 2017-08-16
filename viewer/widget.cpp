@@ -229,31 +229,47 @@ void Widget::modelProjection()
 
 void Widget::gaussNewton()
 {
-    addModel();
+    addModel();   
+    models[2]->obj->textures = models[1]->obj->textures;
+    models[2]->obj->polygons = models[1]->obj->polygons;
+    models[2]->randomColor();
     Optimizations opt;
 
-    QVector<double> vector = { 1,1,1,1,1,1,1 };
-    //double lv = 1e-5;
-    //QVector<double> vector = { 0, 0, 0, 0, 0, 0, 0 };
+    QVector<double> vector = { 1,1,1,1,0,0,0 };
+    double lv = 1e-5;
+    //QVector<double> vector = { lv, lv, lv, lv, lv, lv, lv };
+
     Functor sf = Functor(models[0]->obj->vertexes.toVector(),
                          models[1]->obj->vertexes.toVector(), ProblemVector(vector));
 
     int num = 0;
     ProblemVector pv = opt.gaussNewton(sf);
-    while(pv.goNext && num < 30){
+    while(pv.goNext && num < 50){
         sf.probVector = pv;
         pv = opt.gaussNewton(sf);
+        double norm = qSqrt(qPow(pv.params[0],2) +
+                qPow(pv.params[1],2) +
+                qPow(pv.params[2],2) +
+                qPow(pv.params[3],2));
+
+        pv.params[0] /= norm;
+        pv.params[1] /= norm;
+        pv.params[2] /= norm;
+        pv.params[3] /= norm;
         // apply mod to points
+        models[2]->obj->vertexes = models[1]->modifyVertexes(pv);
+        models[2]->obj->getNormals();
+        models[2]->vbo.loadVBO(models[2]->obj);
+        this->update();
+
+        QApplication::processEvents();
+        QThread::msleep(5);
         qDebug() << num++;
     }
     qDebug() << pv.params;
 
-    models[2]->obj->vertexes = models[1]->modifyVertexes(pv);
-    models[2]->obj->textures = models[1]->obj->textures;
-    models[2]->obj->polygons = models[1]->obj->polygons;
-    models[2]->obj->getNormals();
-    models[2]->randomColor();
-    models[2]->vbo.loadVBO(models[2]->obj);
+
+
     models[2]->bvh.buildBVH(models[2]->obj);
     update();
     //models[1]->vbo.loadVBO(models[1]->modifyObj(pv));

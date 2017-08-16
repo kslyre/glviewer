@@ -15,6 +15,8 @@
 #include <QOpenGLShaderProgram>
 #include <QGLBuffer>
 #include <QOpenGLFunctions>
+#include <QApplication>
+#include <QThread>
 
 class Widget : public QGLWidget
 {

@@ -13,7 +13,7 @@ public:
 
     Derivable(double _val, double _deriv) : val(_val), deriv(_deriv) {}
     Derivable(double c): val(c), deriv(0) {}
-    Derivable(int c): val(c), deriv(c) {}
+    //Derivable(int c): val(c), deriv(c) {}
     static Derivable IndependendVariable(double x) { return Derivable(x,1); }
     static Derivable NoVariable(double x) { return Derivable(x,0); }
 
