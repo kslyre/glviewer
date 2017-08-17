@@ -208,6 +208,13 @@ void Widget::resetView()
     update();
 }
 
+// add model to list
+Model* Widget::addModel()
+{
+    models.append(factory.createModel());
+    return models.last();
+}
+
 void Widget::clearScene()
 {
     models.clear();
@@ -235,16 +242,16 @@ void Widget::gaussNewton()
     models[2]->randomColor();
     Optimizations opt;
 
-    QVector<double> vector = { 1,1,1,1,0,0,0 };
-    double lv = 1e-5;
-    //QVector<double> vector = { lv, lv, lv, lv, lv, lv, lv };
-
-    Functor sf = Functor(models[0]->obj->vertexes.toVector(),
-                         models[1]->obj->vertexes.toVector(), ProblemVector(vector));
+    //QVector<double> vector = { 1e-2,1e-2,1e-2,1e-2,0,0,0 };
+    QVector<double> vector = { 1,0,0,0,0,0,0 };
+    ProblemVector pv = ProblemVector(vector);
+    Functor sf = Functor(models[0]->obj->vertexes,
+                         models[1]->obj->vertexes, pv);
 
     int num = 0;
-    ProblemVector pv = opt.gaussNewton(sf);
     while(pv.goNext && num < 50){
+        qDebug() << num++;
+
         sf.probVector = pv;
         pv = opt.gaussNewton(sf);
         double norm = qSqrt(qPow(pv.params[0],2) +
@@ -256,28 +263,78 @@ void Widget::gaussNewton()
         pv.params[1] /= norm;
         pv.params[2] /= norm;
         pv.params[3] /= norm;
+
         // apply mod to points
-        models[2]->obj->vertexes = models[1]->modifyVertexes(pv);
+        models[2]->obj->vertexes = opt.modifyVertexes(models[1]->obj->vertexes, pv);
+        models[2]->obj->getNormals();
+        models[2]->vbo.loadVBO(models[2]->obj);
+        this->update();
+
+        QApplication::processEvents();
+        QThread::msleep(5);      
+    }
+    qDebug() << "res:  " << pv.params;
+
+
+    models[2]->bvh.buildBVH(models[2]->obj);
+    update();
+}
+
+void Widget::icp()
+{
+    addModel();
+    models[2]->obj->textures = models[1]->obj->textures;
+    models[2]->obj->polygons = models[1]->obj->polygons;
+    models[2]->randomColor();
+    Optimizations opt;
+    QVector<QVector3D> fig2 = models[1]->obj->vertexes;
+
+    QVector<double> vector = { 1,0,0,0,0,0,0 };
+    ProblemVector pv = ProblemVector(vector);
+    Functor sf = Functor(models[0]->obj->vertexes,
+                         fig2, pv);
+
+    int num = 0;
+    while(pv.goNext && num < 50){
+        qDebug() << num++;
+
+        QVector<QVector3D> fig3;
+        // foreach point find nearest point
+        foreach(QVector3D p1, models[0]->obj->vertexes){
+            QVector3D nearest = QVector3D(999,999,999);
+            foreach (QVector3D p2, sf.points2) {
+                if((p2-p1).length() < (nearest-p1).length())
+                    nearest = p2;
+            }
+            fig3.append(nearest);
+        }
+        sf.points2 = fig3;
+
+
+        sf.probVector = pv;
+        pv = opt.gaussNewton(sf);
+        double norm = qSqrt(qPow(pv.params[0],2) +
+                qPow(pv.params[1],2) +
+                qPow(pv.params[2],2) +
+                qPow(pv.params[3],2));
+
+        pv.params[0] /= norm;
+        pv.params[1] /= norm;
+        pv.params[2] /= norm;
+        pv.params[3] /= norm;
+
+        // apply mod to points
+        models[2]->obj->vertexes = opt.modifyVertexes(sf.points2, pv);
         models[2]->obj->getNormals();
         models[2]->vbo.loadVBO(models[2]->obj);
         this->update();
 
         QApplication::processEvents();
         QThread::msleep(5);
-        qDebug() << num++;
     }
-    qDebug() << pv.params;
-
+    qDebug() << "res:  " << pv.params;
 
 
     models[2]->bvh.buildBVH(models[2]->obj);
     update();
-    //models[1]->vbo.loadVBO(models[1]->modifyObj(pv));
-}
-
-// add model to list
-Model* Widget::addModel()
-{
-    models.append(factory.createModel());
-    return models.last();
 }

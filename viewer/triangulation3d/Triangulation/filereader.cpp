@@ -7,8 +7,8 @@ FileReader::FileReader()
 
 Obj *FileReader::createEmpty()
 {
-    QList<QVector3D> v;
-    QList<QVector3D> vt;
-    QList<PolygonStruct> p;
+    QVector<QVector3D> v;
+    QVector<QVector3D> vt;
+    QVector<PolygonStruct> p;
     return new Obj(v, vt, p);
 }

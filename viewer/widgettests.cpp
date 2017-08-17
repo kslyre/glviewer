@@ -1,4 +1,5 @@
 #include "derivable.h"
+#include "optimizations.h"
 #include "widgettests.h"
 
 WidgetTests::WidgetTests(QObject *parent) : QObject(parent)
@@ -126,7 +127,83 @@ void WidgetTests::multDeriv()
 {
     Derivable d1 = Derivable::IndependendVariable(10);
     Derivable d2 = Derivable::IndependendVariable(10);
-    qDebug() << (d1*d2).getDerivative();
+    QCOMPARE((d1*d2).getDerivative(), 20.f);
+}
+
+void WidgetTests::testGaussNewton()
+{
+    Optimizations opt;
+
+    QVector<double> vector = { 1,0,0,0,0,0,0 };
+    ProblemVector pv = ProblemVector(vector);
+
+    QVector<QVector3D> fig1;
+    fig1.append(QVector3D(0,0,1));
+    fig1.append(QVector3D(0,1,1));
+    fig1.append(QVector3D(1,0,1));
+    fig1.append(QVector3D(1,1,1));
+
+    QVector<QVector3D> fig2;
+    fig2.append(QVector3D(1,1,1));
+    fig2.append(QVector3D(1,2,1));
+    fig2.append(QVector3D(2,1,1));
+    fig2.append(QVector3D(2,2,1));
+
+    Functor sf = Functor(fig1,
+                         fig2, pv);
+
+    int num = 0;
+    while(pv.goNext && num < 50){
+        sf.probVector = pv;
+        pv = opt.gaussNewton(sf);
+        double norm = qSqrt(qPow(pv.params[0],2) +
+                qPow(pv.params[1],2) +
+                qPow(pv.params[2],2) +
+                qPow(pv.params[3],2));
+
+        pv.params[0] /= norm;
+        pv.params[1] /= norm;
+        pv.params[2] /= norm;
+        pv.params[3] /= norm;
+    }
+    qDebug() << "res:  " << pv.params;
+    QCOMPARE(1,1);
+}
+
+void WidgetTests::testGaussNewtonAuto()
+{
+    Optimizations opt;
+
+    QVector<double> vector = { 1,0,0,0,0,0,0 };
+    ProblemVector pv = ProblemVector(vector);
+
+    QVector<QVector3D> fig1;
+    fig1.append(QVector3D(0,0,1));
+    fig1.append(QVector3D(0,1,1));
+    fig1.append(QVector3D(1,0,1));
+    fig1.append(QVector3D(1,1,1));
+
+    QVector<double> vectorI = { 1,0,0,0,1,1,0 };
+    QVector<QVector3D> fig2 = opt.modifyVertexes(fig1, vectorI);
+
+    Functor sf = Functor(fig1,
+                         fig2, pv);
+
+    int num = 0;
+    while(pv.goNext && num < 50){
+        sf.probVector = pv;
+        pv = opt.gaussNewton(sf);
+        double norm = qSqrt(qPow(pv.params[0],2) +
+                qPow(pv.params[1],2) +
+                qPow(pv.params[2],2) +
+                qPow(pv.params[3],2));
+
+        pv.params[0] /= norm;
+        pv.params[1] /= norm;
+        pv.params[2] /= norm;
+        pv.params[3] /= norm;
+    }
+    qDebug() << "res:  " << pv.params;
     QCOMPARE(1,1);
 }
 

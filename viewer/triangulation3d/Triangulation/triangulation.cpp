@@ -5,7 +5,7 @@ Triangulation::Triangulation()
 
 }
 
-void Triangulation::calculate(QList<PolygonStruct> input, QList<PolygonStruct> &output)
+void Triangulation::calculate(QVector<PolygonStruct> input, QVector<PolygonStruct> &output)
 {
     foreach (PolygonStruct f, input) {
         Q_ASSERT(f.list.length() >= 3);

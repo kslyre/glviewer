@@ -36,6 +36,7 @@ public:
     void resetView();
     void clearScene();
     void gaussNewton();
+    void icp();
 protected:
     void initializeGL();
     void resizeGL(int nWidth, int nHeight);

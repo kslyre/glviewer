@@ -11,10 +11,11 @@ using namespace Eigen;
 
 class Functor
 {
+public:
     QVector<QVector3D> points1;
     QVector<QVector3D> points2;
     QVector3D center2;
-public:
+
     Functor();
     Functor(QVector<QVector3D> points1, QVector<QVector3D> point2, ProblemVector pv);
 

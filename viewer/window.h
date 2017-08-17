@@ -37,6 +37,7 @@ private slots:
     void projection();
     void gaussNewton();
     void listClick(QListWidgetItem *item);
+    void icp();
 private:
     Widget *glwidget;
     QListWidget *modelList;

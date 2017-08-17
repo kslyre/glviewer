@@ -5,7 +5,7 @@ Obj::Obj(){
 
 }
 
-Obj::Obj(QList<QVector3D> vertexes, QList<QVector3D> textures, QList<PolygonStruct> polygons)
+Obj::Obj(QVector<QVector3D> vertexes, QVector<QVector3D> textures, QVector<PolygonStruct> polygons)
 {
     this->vertexes = vertexes;
     this->textures = textures;
@@ -166,7 +166,7 @@ void Obj::getNormals()
     }
 }
 
-void Obj::getBounds(QList<QVector3D> vertexes, QList<PolygonStruct> polygons)
+void Obj::getBounds(QVector<QVector3D> vertexes, QVector<PolygonStruct> polygons)
 {
     for(int poly=0; poly<polygons.length(); poly++){
     //foreach (PolygonStruct f, polygons){

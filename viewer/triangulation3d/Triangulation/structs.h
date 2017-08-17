@@ -10,6 +10,8 @@ struct PolygonVertex
     int texture;
     int normal;
 
+    PolygonVertex() {}
+
     PolygonVertex(int v, int vt=0, int n=0){
         vertex = v;
         texture = vt;
@@ -26,7 +28,7 @@ struct PolygonVertex
 
 struct PolygonStruct
 {
-    QList<PolygonVertex> list;
+    QVector<PolygonVertex> list;
 
     inline bool operator== (const PolygonStruct &p) const
     {

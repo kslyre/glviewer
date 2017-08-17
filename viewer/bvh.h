@@ -20,7 +20,7 @@ public:
 
     //QList<int> middleIndexes;
 
-    QList<int> polyIndexes;
+    QVector<int> polyIndexes;
 };
 
 class BVH
@@ -36,7 +36,7 @@ private:
     void proceedBVHleaf(BVHstruct *leaf, Obj *model);
     Divider getDivider(Box &box);
     void proceedBound(QVector3D vertex, Box &box);
-    int getPolySide(Divider divine, Box bound, QList<QVector3D> vertexes);
+    int getPolySide(Divider divine, Box bound, QVector<QVector3D> vertexes);
 };
 
 #endif // BVH_H

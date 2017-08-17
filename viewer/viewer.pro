@@ -27,7 +27,8 @@ SOURCES += main.cpp\
     vbo.cpp \
     derivable.cpp \
     functors.cpp \
-    optimizations.cpp
+    optimizations.cpp \
+    kdtree.cpp
 
 HEADERS  += widget.h \
     window.h \
@@ -40,7 +41,8 @@ HEADERS  += widget.h \
     vbo.h \
     derivable.h \
     functors.h \
-    optimizations.h
+    optimizations.h \
+    kdtree.h
 
 RESOURCES += \
     resources.qrc

@@ -11,13 +11,13 @@ class Obj : public File
 {
 public:
     Obj();
-    Obj(QList<QVector3D> vertexes, QList<QVector3D> textures, QList<PolygonStruct> polygons);
+    Obj(QVector<QVector3D> vertexes, QVector<QVector3D> textures, QVector<PolygonStruct> polygons);
     ~Obj();
 
-    QList<QVector3D> vertexes;
-    QList<QVector3D> textures;
-    QList<QVector4D> normals;
-    QList<PolygonStruct> polygons;
+    QVector<QVector3D> vertexes;
+    QVector<QVector3D> textures;
+    QVector<QVector4D> normals;
+    QVector<PolygonStruct> polygons;
 
     Box size;
 
@@ -26,7 +26,7 @@ public:
     bool readObj(QTextStream &textStream);
     void writeObj(QTextStream &textStream) const;
     void getNormals();
-    void getBounds(QList<QVector3D> vertexes, QList<PolygonStruct> polygons);
+    void getBounds(QVector<QVector3D> vertexes, QVector<PolygonStruct> polygons);
 
     void proceedBound(QVector3D vertex, Box &box);
 private:

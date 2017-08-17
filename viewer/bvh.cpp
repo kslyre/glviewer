@@ -28,7 +28,7 @@ void BVH::buildBVH(Obj *model)
     rootBVH->bound = model->size;
 
     proceedBVHleaf(rootBVH, model);
-    qInfo() << "# done";
+    qInfo() << "# done / bvh";
 }
 
 void BVH::proceedBVHleaf(BVHstruct *leaf, Obj *model)
@@ -46,7 +46,7 @@ void BVH::proceedBVHleaf(BVHstruct *leaf, Obj *model)
 
         // get polygon side relatively to divider
         int res = getPolySide(divine, leaf->bound,
-                              QList<QVector3D>()
+                              QVector<QVector3D>()
                               <<  model->vertexes[model->polygons[polygonIndex].list[0].vertex]
                               <<  model->vertexes[model->polygons[polygonIndex].list[1].vertex]
                               <<  model->vertexes[model->polygons[polygonIndex].list[2].vertex]
@@ -76,7 +76,7 @@ void BVH::proceedBVHleaf(BVHstruct *leaf, Obj *model)
     proceedBVHleaf(leaf->right, model);
 }
 
-int BVH::getPolySide(Divider divine, Box bound, QList<QVector3D> vertexes)
+int BVH::getPolySide(Divider divine, Box bound, QVector<QVector3D> vertexes)
 {
     int sum = 0;
     foreach (QVector3D v, vertexes){

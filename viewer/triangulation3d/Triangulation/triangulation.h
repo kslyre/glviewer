@@ -8,7 +8,7 @@ class Triangulation
 public:
     Triangulation();
 
-    void calculate(QList<PolygonStruct> input, QList<PolygonStruct> &output);
+    void calculate(QVector<PolygonStruct> input, QVector<PolygonStruct> &output);
 private:
 
 };

@@ -11,7 +11,7 @@ class RayTrace
 public:
     RayTrace();
 
-    QList<BVHstruct*> leafs;
+    QVector<BVHstruct*> leafs;
 
     void trace(Obj *low, Obj *high, Obj *output, BVHstruct *bvh, int bvhDepth);
 

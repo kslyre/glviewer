@@ -21,7 +21,7 @@ void RayTrace::trace(Obj *low, Obj *high, Obj *output, BVHstruct *bvh, int bvhDe
                        low->normals[vertex].toVector3D(),
                        bvh);
 
-        QList<QVector3D> tracedVertexes;
+        QVector<QVector3D> tracedVertexes;
 
         foreach (BVHstruct* leaf, leafs) {
             foreach (int polygonIndex, leaf->polyIndexes){

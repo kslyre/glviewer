@@ -15,6 +15,7 @@ Window::Window()
     QPushButton *resetButton = createButton(tr("Reset"));
     QPushButton *fitButton = createButton(tr("Perfect Fit"));
     QPushButton *projButton = createButton(tr("Projection"));
+    QPushButton *rigidButton = createButton(tr("Rigid"));
     QPushButton *icpButton = createButton(tr("ICP"));
     modelList = new QListWidget();
 
@@ -24,7 +25,8 @@ Window::Window()
     connect(resetButton, &QPushButton::clicked, glwidget, &Widget::resetView);
     connect(fitButton,   &QPushButton::clicked, this, &Window::perfectFit);
     connect(projButton,  &QPushButton::clicked, this, &Window::projection);
-    connect(icpButton,  &QPushButton::clicked, this, &Window::gaussNewton);
+    connect(rigidButton,  &QPushButton::clicked, this, &Window::gaussNewton);
+    connect(icpButton,  &QPushButton::clicked, this, &Window::icp);
     connect(modelList,   &QListWidget::itemClicked, this, &Window::listClick);
 
     QGridLayout *layout = new QGridLayout;
@@ -33,8 +35,11 @@ Window::Window()
     layout->addWidget(clearButton, 0,6, 1,3);
     layout->addWidget(resetButton, 0,9, 1,3);
     layout->addWidget(fitButton, 0,12, 1,3);
-    layout->addWidget(projButton, 0,16, 1,3);
-    layout->addWidget(icpButton, 0,19, 1,3);
+
+    layout->addWidget(projButton, 0,16, 1,2);
+    layout->addWidget(rigidButton, 0,18, 1,2);
+    layout->addWidget(icpButton, 0,20, 1,2);
+
     layout->addWidget(glwidget,   1,0, 20,20);
     layout->addWidget(modelList,  1,20, 8,2);
 
@@ -207,6 +212,20 @@ void Window::gaussNewton()
 {
     if(glwidget->models.count() == 2){
         glwidget->gaussNewton();
+
+        QListWidgetItem* item = new QListWidgetItem("rigid", modelList);
+        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+        item->setCheckState(Qt::Checked);
+    }
+    else {
+        showErrorMessage(ERRORS::MODELS_COUNT);
+    }
+}
+
+void Window::icp()
+{
+    if(glwidget->models.count() == 2){
+        glwidget->icp();
 
         QListWidgetItem* item = new QListWidgetItem("icp", modelList);
         item->setFlags(item->flags() | Qt::ItemIsUserCheckable);

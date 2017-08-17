@@ -21,6 +21,8 @@ private slots:
     void testTraceBoxFalse();
     void sqrtDeriv();
     void multDeriv();
+    void testGaussNewton();
+    void testGaussNewtonAuto();
 signals:
 
 public slots:

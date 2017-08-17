@@ -20,7 +20,7 @@ public:
     Obj *obj;
 
     void randomColor();
-    QList<QVector3D> modifyVertexes(ProblemVector res);
+    //QVector<QVector3D> modifyVertexes(ProblemVector res);
 private:
     double my_rand(int accuracy);
 };
