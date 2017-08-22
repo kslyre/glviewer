@@ -283,11 +283,12 @@ void Widget::gaussNewton()
 void Widget::icp()
 {
     addModel();
+    models[2]->obj->vertexes = models[1]->obj->vertexes;
     models[2]->obj->textures = models[1]->obj->textures;
     models[2]->obj->polygons = models[1]->obj->polygons;
     models[2]->randomColor();
     Optimizations opt;
-    QVector<QVector3D> fig2 = models[1]->obj->vertexes;
+    QVector<QVector3D> fig2;// = models[1]->obj->vertexes;
 
     QVector<double> vector = { 1,0,0,0,0,0,0 };
     ProblemVector pv = ProblemVector(vector);
@@ -298,14 +299,19 @@ void Widget::icp()
     while(pv.goNext && num < 50){
         qDebug() << num++;
 
+        fig2 = models[2]->obj->vertexes;
+
         QVector<QVector3D> fig3;
+        models[2]->kdt.buildKDTree(fig2);
         // foreach point find nearest point
         foreach(QVector3D p1, models[0]->obj->vertexes){
-            QVector3D nearest = QVector3D(999,999,999);
-            foreach (QVector3D p2, sf.points2) {
+            /*QVector3D nearest = QVector3D(999,999,999);
+            foreach (QVector3D p2, fig2) {
                 if((p2-p1).length() < (nearest-p1).length())
                     nearest = p2;
-            }
+            }*/
+            //QVector3D nearest = models[1]->bvh.getClosestPoint(p1, models[1]->obj);
+            QVector3D nearest = models[2]->kdt.getClosestPoint(p1);
             fig3.append(nearest);
         }
         sf.points2 = fig3;
@@ -324,7 +330,7 @@ void Widget::icp()
         pv.params[3] /= norm;
 
         // apply mod to points
-        models[2]->obj->vertexes = opt.modifyVertexes(sf.points2, pv);
+        models[2]->obj->vertexes = opt.modifyVertexes(fig2, pv);
         models[2]->obj->getNormals();
         models[2]->vbo.loadVBO(models[2]->obj);
         this->update();

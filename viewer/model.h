@@ -2,6 +2,7 @@
 #define MODEL_H
 
 #include "bvh.h"
+#include "kdtree.h"
 #include "vbo.h"
 #include <obj.h>
 
@@ -18,6 +19,7 @@ public:
     BVH bvh;
     VBO vbo;
     Obj *obj;
+    KDTree kdt;
 
     void randomColor();
     //QVector<QVector3D> modifyVertexes(ProblemVector res);

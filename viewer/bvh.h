@@ -18,7 +18,6 @@ public:
 
     Box bound;
 
-    //QList<int> middleIndexes;
 
     QVector<int> polyIndexes;
 };

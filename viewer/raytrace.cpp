@@ -151,5 +151,3 @@ bool RayTrace::traceBox(QVector3D vertex, QVector3D normal, Box box)
 
     return (tmin <= tmax) && (tmax > 10e-14);
 }
-
-
