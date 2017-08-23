@@ -86,7 +86,7 @@ VectorXf Optimizations::innerFunc(Functor functor)
 
 ProblemVector Optimizations::gaussNewton(Functor functor)
 {
-    bool go = functor.probVector.goNext;
+    bool toContinue = functor.problemVector.goNext;
 
     MatrixXf j = jacobian(functor);
     VectorXf f = innerFunc(functor);
@@ -96,25 +96,26 @@ ProblemVector Optimizations::gaussNewton(Functor functor)
 
     MatrixXf x = a.colPivHouseholderQr().solve(-b);
 
-    QVector<double> vector = { x(0), x(1), x(2), x(3), x(4), x(5), x(6) };
-    ProblemVector add = ProblemVector(vector);
-    ProblemVector nextIter = functor.probVector + add;
-    qDebug() << ProblemVector(vector).params;
-    double err = (functor.func(nextIter) - functor.func(functor.probVector)).length();
-    qDebug() << functor.func(nextIter) << err << "|" << add.Length();
-    go = (err > 1e-5) & (qAbs(nextIter.Length() - functor.probVector.Length()) > 1e-6);
-    //qDebug() << (nextIter - functor.probVector).Length();
+    QVector<double> solutionProblemVector = { x(0), x(1), x(2), x(3), x(4), x(5), x(6) };
+    ProblemVector addition = ProblemVector(solutionProblemVector);
+    ProblemVector nextIterationPV = functor.problemVector + addition;
+    double deltaError = (functor.func(nextIterationPV) - functor.func(functor.problemVector)).length();
+
+    //qDebug() << functor.func(nextIter) << err << "|" << add.Length();
+    toContinue = (deltaError > 1e-6) && (qAbs(nextIterationPV.Length() - functor.problemVector.Length()) > 1e-8);
+    //qDebug() << deltaError << qAbs(nextIterationPV.Length() - functor.problemVector.Length());
+
     //min = err < 1e-5;
 
-    if(err != err) {
-        go = false;
+    if(std::isnan(deltaError)){
+        qDebug() << "" << deltaError <<
+                    (functor.func(nextIterationPV) - functor.func(functor.problemVector)).length() << nextIterationPV.params;
+        qDebug() << "   NaN error";
+        toContinue = false;
     }
-    //if(nextIter.params[0] > 1e+6)
-    //    go = false;
-    //if(nextIter.Length() < functor.probVector.Length())
-    //    go = false;
-    functor.probVector = nextIter;
 
-    functor.probVector.goNext = go;
-    return functor.probVector;
+    functor.problemVector = nextIterationPV;
+
+    functor.problemVector.goNext = toContinue;
+    return functor.problemVector;
 }

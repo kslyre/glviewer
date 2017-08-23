@@ -82,7 +82,6 @@ QVector3D RayTrace::interPoint(QVector3D a, QVector3D b, QVector3D c, QVector3D 
 // not using
 double RayTrace::pointCheck(QVector3D a, QVector3D b, QVector3D c, QVector3D p)
 {
-    // http://cyber-code.ru/tochka_v_treugolnike/
     a = a - a;
     b = b - a;
     c = c - a;

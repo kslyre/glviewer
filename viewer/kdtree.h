@@ -37,6 +37,7 @@ public:
     void buildKDTree(QVector<QVector3D> list);
     void proceedLeaf(KDTstruct *leaf);
     QVector3D getClosestPoint(QVector3D initial);
+    KDTstruct *getLeaf(KDTstruct *node, QVector3D vertex);
 private:
     void getLeafStructs(KDTstruct *node);
     void proceedBound(QVector3D vertex, Box &box);

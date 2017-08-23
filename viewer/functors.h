@@ -21,16 +21,16 @@ public:
 
     int elems() { return 3; }
     int pointsCount() { return points1.length(); }
-    int pvLength() { return probVector.params.length(); }
+    int pvLength() const { return problemVector.params.length(); }
 
-    ProblemVector probVector;
+    ProblemVector problemVector;
 
     double func();
     double innerFunc();
     void center();
     double grad();
-    QVector<Derivable> f(ProblemVector pv, int index, int indexParam);
-    QVector3D func(ProblemVector pv);
+    QVector<Derivable> f(ProblemVector pv, int index, int indexParam) const;
+    QVector3D func(ProblemVector pv) const;
     ProblemVector grad(int index, int indElem);
     QVector3D funcDeriv(int index);
 

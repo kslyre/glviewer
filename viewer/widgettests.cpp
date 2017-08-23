@@ -154,7 +154,7 @@ void WidgetTests::testGaussNewton()
 
     int num = 0;
     while(pv.goNext && num < 50){
-        sf.probVector = pv;
+        sf.problemVector = pv;
         pv = opt.gaussNewton(sf);
         double norm = qSqrt(qPow(pv.params[0],2) +
                 qPow(pv.params[1],2) +
@@ -191,7 +191,7 @@ void WidgetTests::testGaussNewtonAuto()
 
     int num = 0;
     while(pv.goNext && num < 50){
-        sf.probVector = pv;
+        sf.problemVector = pv;
         pv = opt.gaussNewton(sf);
         double norm = qSqrt(qPow(pv.params[0],2) +
                 qPow(pv.params[1],2) +

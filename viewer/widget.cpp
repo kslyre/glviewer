@@ -242,7 +242,6 @@ void Widget::gaussNewton()
     models[2]->randomColor();
     Optimizations opt;
 
-    //QVector<double> vector = { 1e-2,1e-2,1e-2,1e-2,0,0,0 };
     QVector<double> vector = { 1,0,0,0,0,0,0 };
     ProblemVector pv = ProblemVector(vector);
     Functor sf = Functor(models[0]->obj->vertexes,
@@ -252,7 +251,7 @@ void Widget::gaussNewton()
     while(pv.goNext && num < 50){
         qDebug() << num++;
 
-        sf.probVector = pv;
+        sf.problemVector = pv;
         pv = opt.gaussNewton(sf);
         double norm = qSqrt(qPow(pv.params[0],2) +
                 qPow(pv.params[1],2) +
@@ -288,15 +287,16 @@ void Widget::icp()
     models[2]->obj->polygons = models[1]->obj->polygons;
     models[2]->randomColor();
     Optimizations opt;
-    QVector<QVector3D> fig2;// = models[1]->obj->vertexes;
+    QVector<QVector3D> fig2;
 
     QVector<double> vector = { 1,0,0,0,0,0,0 };
-    ProblemVector pv = ProblemVector(vector);
-    Functor sf = Functor(models[0]->obj->vertexes,
-                         fig2, pv);
+    ProblemVector problemVector = ProblemVector(vector);
+    Functor functor = Functor(models[0]->obj->vertexes,
+                         fig2, problemVector);
 
     int num = 0;
-    while(pv.goNext && num < 50){
+    while(problemVector.goNext && num < 50){
+        qDebug() << " ";
         qDebug() << num++;
 
         fig2 = models[2]->obj->vertexes;
@@ -305,32 +305,29 @@ void Widget::icp()
         models[2]->kdt.buildKDTree(fig2);
         // foreach point find nearest point
         foreach(QVector3D p1, models[0]->obj->vertexes){
-            /*QVector3D nearest = QVector3D(999,999,999);
-            foreach (QVector3D p2, fig2) {
-                if((p2-p1).length() < (nearest-p1).length())
-                    nearest = p2;
-            }*/
-            //QVector3D nearest = models[1]->bvh.getClosestPoint(p1, models[1]->obj);
             QVector3D nearest = models[2]->kdt.getClosestPoint(p1);
             fig3.append(nearest);
         }
-        sf.points2 = fig3;
+        functor.points2 = fig3;
 
+        for(int i=0; i<2; i++){
+            functor.problemVector = problemVector;
+            problemVector = opt.gaussNewton(functor);
 
-        sf.probVector = pv;
-        pv = opt.gaussNewton(sf);
-        double norm = qSqrt(qPow(pv.params[0],2) +
-                qPow(pv.params[1],2) +
-                qPow(pv.params[2],2) +
-                qPow(pv.params[3],2));
+            double norm = qSqrt(qPow(problemVector.params[0],2) +
+                    qPow(problemVector.params[1],2) +
+                    qPow(problemVector.params[2],2) +
+                    qPow(problemVector.params[3],2));
 
-        pv.params[0] /= norm;
-        pv.params[1] /= norm;
-        pv.params[2] /= norm;
-        pv.params[3] /= norm;
+            problemVector.params[0] /= norm;
+            problemVector.params[1] /= norm;
+            problemVector.params[2] /= norm;
+            problemVector.params[3] /= norm;
+            functor.problemVector = problemVector;
+        }
 
         // apply mod to points
-        models[2]->obj->vertexes = opt.modifyVertexes(fig2, pv);
+        models[2]->obj->vertexes = opt.modifyVertexes(fig2, problemVector);
         models[2]->obj->getNormals();
         models[2]->vbo.loadVBO(models[2]->obj);
         this->update();
@@ -338,8 +335,7 @@ void Widget::icp()
         QApplication::processEvents();
         QThread::msleep(5);
     }
-    qDebug() << "res:  " << pv.params;
-
+    qDebug() << "res:  " << problemVector.params;
 
     models[2]->bvh.buildBVH(models[2]->obj);
     update();

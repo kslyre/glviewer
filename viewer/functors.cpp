@@ -10,20 +10,24 @@ Functor::Functor(QVector<QVector3D> point1, QVector<QVector3D> point2, ProblemVe
 {
     this->points1 = point1;
     this->points2 = point2;
-    this->probVector = pv;
+    this->problemVector = pv;
     center();
 }
 
-QVector3D Functor::func(ProblemVector pv)
+QVector3D Functor::func(ProblemVector pv) const
 {
     QVector<Derivable> resDeriv = f(pv, -1, -1);
-    QVector3D res = { resDeriv[0].getValue(), resDeriv[1].getValue(), resDeriv[2].getValue() };
+    //QVector3D res = QVector3D(resDeriv[0].getValue(), resDeriv[1].getValue(), resDeriv[2].getValue());
+    QVector3D res;
+    res.setX(resDeriv[0].getValue());
+    res.setY(resDeriv[1].getValue());
+    res.setZ(resDeriv[2].getValue());
     return res;
 }
 
 QVector<double> Functor::func(int index)
 {
-    QVector<Derivable> resDeriv = f(probVector, index, -1);
+    QVector<Derivable> resDeriv = f(problemVector, index, -1);
     QVector<double> res;
     res.append(resDeriv[0].getValue());
     res.append(resDeriv[1].getValue());
@@ -36,36 +40,29 @@ ProblemVector Functor::grad(int index, int indElem)
     QVector<double> v = {0,0,0,0,0,0,0};
     ProblemVector res = ProblemVector(v);
     for(int i=0; i<pvLength(); i++) {
-        res.params[i] = f(probVector, index, i)[indElem].getDerivative();
+        res.params[i] = f(problemVector, index, i)[indElem].getDerivative();
     }
     return res;
 }
 
 QVector3D Functor::funcDeriv(int index)
 {
-    QVector<Derivable> resDeriv = f(probVector, index, -1);
-    QVector3D res = { resDeriv[0].getDerivative(), resDeriv[1].getDerivative(), resDeriv[2].getDerivative() };
+    QVector<Derivable> resDeriv = f(problemVector, index, -1);
+    //QVector3D res = { resDeriv[0].getDerivative(), resDeriv[1].getDerivative(), resDeriv[2].getDerivative() };
+    QVector3D res;
+    res.setX(resDeriv[0].getDerivative());
+    res.setY(resDeriv[1].getDerivative());
+    res.setZ(resDeriv[2].getDerivative());
     return res;
 }
 
-QVector<Derivable> Functor::f(ProblemVector pv, int index, int indexParam)
+QVector<Derivable> Functor::f(ProblemVector pv, int index, int indexParam) const
 {
     QVector<Derivable> pvD;
-
-    double norm1 = qSqrt(qPow(pv.params[0],2) +
-            qPow(pv.params[1],2) +
-            qPow(pv.params[2],2) +
-            qPow(pv.params[3],2));
-    //if(norm1*norm1 < 1.f)
-    //    norm1 = 1.f;
-    if(norm1 < 1e-8)
-        norm1 = 1;
 
     for(int i=0; i<pvLength(); i++){
         Derivable xD;
         double value = pv.params[i];
-        //if(i < 4)
-        //    value /= norm1;
 
         if(i == indexParam)
             xD = Derivable::IndependendVariable(value);
@@ -105,17 +102,6 @@ QVector<Derivable> Functor::f(ProblemVector pv, int index, int indexParam)
     tv << pvD[4], pvD[5], pvD[6];
 
     Matrix<Derivable, 3, 1> resv;
-
-    /*qDebug() << Derivable(1.f).getDerivative()
-             << (Derivable(2)*y*y).getDerivative()
-             << (Derivable(2)*z*z).getDerivative();
-    for(int i=0;i<3;i++){
-        QString s = "";
-        for(int j=0;j<3;j++){
-            s += QString::number(qm(i,j).getDerivative()) + " ";
-        }
-        qDebug() << s;
-    }*/
 
     if(index != -1){
         Matrix<Derivable, 3, 1> point2v;

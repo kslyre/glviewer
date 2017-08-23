@@ -42,6 +42,7 @@ void KDTree::proceedLeaf(KDTstruct *leaf)
     leaf->right = new KDTstruct(leaf->level+1);
 
     Divider divine = getDivider(leaf->bound);
+    leaf->divine = divine;
 
     foreach (QVector3D vertex, leaf->vertexes) {
         int vertSide = getVertexSide(divine, leaf->bound, vertex);
@@ -119,6 +120,8 @@ QVector3D KDTree::getClosestPoint(QVector3D initial)
     int nearStructIndex = 0;
     double nearDist = 9999;
 
+
+
     for(int i=0; i<kdtleafs.length(); i++){
         Box box = kdtleafs[i]->bound;
         QVector3D half = (box.max - box.min)/2;
@@ -149,4 +152,14 @@ void KDTree::getLeafStructs(KDTstruct *node)
 
     getLeafStructs(node->left);
     getLeafStructs(node->right);
+}
+
+KDTstruct* KDTree::getLeaf(KDTstruct *node, QVector3D vertex)
+{
+    if(node->level == kdtDepth || (node->left->vertexes.length()  == 0 ||
+                                   node->right->vertexes.length() == 0 )){
+        return node;
+    }
+
+    return node;
 }

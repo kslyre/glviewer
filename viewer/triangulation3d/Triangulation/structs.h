@@ -70,6 +70,8 @@ struct Divider
     Axis axis;
     double value;   // median value
 
+    Divider() {}
+
     Divider(Axis a, double v){
         axis = a;
         value = v;
